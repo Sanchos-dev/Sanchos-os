@@ -1,5 +1,5 @@
 [Icon Theme]
-Name=Sanchos Mono
-Comment=Monochrome-friendly placeholder theme for sanchos-os
-Inherits=breeze-dark
+Name=sanchos-mono
+Comment=sanchos-os monochrome scaffold
+Inherits=Papirus-Dark,breeze-dark,hicolor
 Directories=

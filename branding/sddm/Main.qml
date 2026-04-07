@@ -11,13 +11,13 @@ Rectangle {
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
         source: "/usr/share/backgrounds/sanchos-os/purple/purple0.png"
-        opacity: 0.55
+        opacity: status === Image.Ready ? 0.55 : 0.0
     }
 
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "#120f18" }
+            GradientStop { position: 0.0; color: "#100d16" }
             GradientStop { position: 1.0; color: "#1b1324" }
         }
         opacity: 0.82
@@ -25,64 +25,25 @@ Rectangle {
 
     Rectangle {
         anchors.centerIn: parent
-        width: 520
-        height: 390
-        radius: 28
-        color: "#1d1727"
-        opacity: 0.94
-        border.color: "#4e3770"
+        width: 560
+        height: 420
+        radius: 32
+        color: "#1a1524"
+        opacity: 0.95
+        border.width: 1
+        border.color: "#5d42a6"
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 34
+            anchors.margins: 36
             spacing: 18
 
-            Label {
-                text: "sanchos-os"
-                color: "#f6f2ff"
-                font.pixelSize: 30
-                font.bold: true
-            }
-
-            Label {
-                text: "Soft purple desktop, native virtualization and a warmer shell."
-                color: "#cdbfe3"
-                wrapMode: Text.WordWrap
-                font.pixelSize: 15
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 44
-                radius: 14
-                color: "#2a2136"
-                TextField {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    placeholderText: "Username"
-                    color: "#f6f2ff"
-                    background: null
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 44
-                radius: 14
-                color: "#2a2136"
-                TextField {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    placeholderText: "Password"
-                    echoMode: TextInput.Password
-                    color: "#f6f2ff"
-                    background: null
-                }
-            }
-
-            Button {
-                text: "Sign in"
-                Layout.fillWidth: true
+            Label { text: "sanchos-os"; color: "#f6f2ff"; font.pixelSize: 32; font.bold: true }
+            Label { text: "warm desktop · native virtualization · soft purple shell"; color: "#cdbfe3"; font.pixelSize: 14 }
+            Rectangle { Layout.fillWidth: true; height: 48; radius: 16; color: "#272032" }
+            Rectangle { Layout.fillWidth: true; height: 48; radius: 16; color: "#272032" }
+            Rectangle { Layout.fillWidth: true; height: 50; radius: 16; color: "#8b5cf6"
+                Label { anchors.centerIn: parent; text: "Sign in"; color: "white"; font.bold: true }
             }
         }
     }

@@ -1,14 +1,8 @@
 {
   "default": "purple/purple0.png",
   "collections": {
-    "purple": [
-      "purple/purple0.png",
-      "purple/purple1.png"
-    ],
-    "default": [
-      "default/sanchos-default.svg",
-      "default/wp0.png"
-    ],
+    "purple": [],
+    "default": [],
     "fox": []
   }
 }
