@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=sanchos-os First Boot
+Exec=/usr/local/lib/sanchos-os/firstboot.py
+X-GNOME-Autostart-enabled=true
+NoDisplay=false
+Terminal=false

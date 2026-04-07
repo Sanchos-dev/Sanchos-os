@@ -1,0 +1,12 @@
+Source: sanchos-branding
+Section: misc
+Priority: optional
+Maintainer: Sanchos <sanchos@sanchos.su>
+Standards-Version: 4.6.2
+Build-Depends: debhelper-compat (= 13)
+
+Package: sanchos-branding
+Architecture: all
+Depends: ${misc:Depends}, sddm
+Description: branding assets for sanchos-os
+ Wallpapers and login screen assets for the sanchos-os desktop.

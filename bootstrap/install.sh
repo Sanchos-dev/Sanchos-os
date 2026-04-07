@@ -21,6 +21,7 @@ install_base_packages() {
   apt-get install -y \
     python3 \
     python3-yaml \
+    python3-tk \
     sudo \
     curl \
     wget \
@@ -51,17 +52,36 @@ install_manifests() {
 }
 
 install_configs() {
-  install -d /etc/libvirt/libvirtd.conf.d /etc/qemu
+  install -d /etc/libvirt/libvirtd.conf.d /etc/qemu /usr/share/backgrounds/sanchos-os /usr/share/sddm/themes/sanchos-os
   if [[ -f "$ROOT_DIR/configs/libvirt/10-sanchos.conf" ]]; then
     install -m0644 "$ROOT_DIR/configs/libvirt/10-sanchos.conf" /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
   fi
   if [[ -f "$ROOT_DIR/configs/network/qemu-bridge.conf" ]]; then
     install -m0644 "$ROOT_DIR/configs/network/qemu-bridge.conf" /etc/qemu/bridge.conf
   fi
+  if [[ -f "$ROOT_DIR/configs/plasma/kdeglobals" ]]; then
+    install -d /etc/skel/.config
+    install -m0644 "$ROOT_DIR/configs/plasma/kdeglobals" /etc/skel/.config/kdeglobals
+  fi
+  if [[ -f "$ROOT_DIR/branding/wallpapers/sanchos-default.svg" ]]; then
+    install -m0644 "$ROOT_DIR/branding/wallpapers/sanchos-default.svg" /usr/share/backgrounds/sanchos-os/sanchos-default.svg
+  fi
+  if [[ -f "$ROOT_DIR/branding/sddm/Main.qml" ]]; then
+    install -m0644 "$ROOT_DIR/branding/sddm/Main.qml" /usr/share/sddm/themes/sanchos-os/Main.qml
+  fi
+  if [[ -f "$ROOT_DIR/branding/sddm/metadata.desktop" ]]; then
+    install -m0644 "$ROOT_DIR/branding/sddm/metadata.desktop" /usr/share/sddm/themes/sanchos-os/metadata.desktop
+  fi
 }
 
 install_sanchosctl() {
   install -Dm755 "$ROOT_DIR/packages/sanchosctl/sanchosctl/cli.py" /usr/local/bin/sanchosctl
+}
+
+install_ui_bits() {
+  install -Dm755 "$ROOT_DIR/firstboot/firstboot.py" /usr/local/lib/sanchos-os/firstboot.py
+  install -Dm755 "$ROOT_DIR/ui/control-center/main.py" /usr/local/bin/sanchos-control-center
+  install -Dm644 "$ROOT_DIR/configs/system/firstboot.desktop" /etc/xdg/autostart/sanchos-firstboot.desktop
 }
 
 install_desktop_vpn_client() {
@@ -110,8 +130,9 @@ main() {
   install_manifests
   install_configs
 
-  log "Installing sanchosctl"
+  log "Installing control tooling"
   install_sanchosctl
+  install_ui_bits
 
   install_desktop_vpn_client
 

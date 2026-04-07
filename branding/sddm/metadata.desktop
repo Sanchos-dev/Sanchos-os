@@ -1,0 +1,10 @@
+[SddmGreeterTheme]
+Name=sanchos-os
+Description=Early SDDM theme for sanchos-os
+Author=Sanchos
+License=MIT
+Type=sddm-theme
+Version=0.1
+MainScript=Main.qml
+Theme-Id=sanchos-os
+Theme-API=2.0

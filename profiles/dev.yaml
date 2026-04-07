@@ -1,16 +1,23 @@
 name: dev
-description: Development-focused profile.
+summary: Desktop profile with development tooling.
+description: Plasma desktop for development work with containers, NekoBox and common CLI tools.
 packages:
+  - plasma-desktop
+  - sddm
+  - dolphin
+  - konsole
+  - kate
+  - firefox-esr
   - git
   - curl
-  - wget
-  - build-essential
-  - python3
-  - python3-venv
-  - python3-pip
   - podman
   - distrobox
+  - python3-tk
 modules:
   - containers
+  - vpn
+  - backup
 settings:
-  developer_tooling: true
+  desktop_environment: plasma
+  display_manager: sddm
+  vpn_client: nekobox

@@ -1,6 +1,6 @@
 name: desktop-virt
 summary: Desktop workstation with local virtualization.
-description: Flagship workstation profile with Plasma, KVM/libvirt, container tooling and NekoBox.
+description: Flagship workstation profile with Plasma, KVM/libvirt, container tooling, branding and NekoBox.
 packages:
   - plasma-desktop
   - sddm
@@ -15,6 +15,7 @@ packages:
   - wireplumber
   - wl-clipboard
   - xdg-desktop-portal-kde
+  - python3-tk
   - qemu-kvm
   - qemu-system
   - qemu-utils

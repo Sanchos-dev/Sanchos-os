@@ -1,0 +1,12 @@
+Source: sanchos-theme
+Section: misc
+Priority: optional
+Maintainer: Sanchos <sanchos@sanchos.su>
+Standards-Version: 4.6.2
+Build-Depends: debhelper-compat (= 13)
+
+Package: sanchos-theme
+Architecture: all
+Depends: ${misc:Depends}, plasma-workspace
+Description: desktop defaults for sanchos-os
+ Desktop defaults and theme-facing configuration for the sanchos-os session.

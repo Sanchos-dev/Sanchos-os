@@ -11,9 +11,9 @@ from pathlib import Path
 
 import yaml
 
-
 STATE_DIR = Path("/etc/sanchos-os/state")
 ENABLED_MODULES_FILE = STATE_DIR / "enabled-modules"
+DEFAULT_VM_STORAGE = Path("/var/lib/libvirt/images")
 
 
 def find_root() -> Path:
@@ -81,32 +81,31 @@ def cmd_system_info(_: argparse.Namespace) -> int:
         pretty = values.get("PRETTY_NAME")
         if pretty:
             print(f"OS:       {pretty}")
-
     return 0
 
 
 def cmd_system_doctor(_: argparse.Namespace) -> int:
     print_header("System doctor")
-
-    checks = []
-    checks.append(("kvm device", Path("/dev/kvm").exists()))
-    checks.append(("qemu-system-x86_64", shutil.which("qemu-system-x86_64") is not None))
-    checks.append(("virsh", shutil.which("virsh") is not None))
-    checks.append(("podman", shutil.which("podman") is not None))
-    checks.append(("nekobox", shutil.which("nekobox") is not None or Path("/opt/nekobox/nekobox.AppImage").exists()))
+    checks = [
+        ("kvm device", Path("/dev/kvm").exists()),
+        ("qemu-system-x86_64", shutil.which("qemu-system-x86_64") is not None),
+        ("virsh", shutil.which("virsh") is not None),
+        ("virt-install", shutil.which("virt-install") is not None),
+        ("podman", shutil.which("podman") is not None),
+        ("nekobox", shutil.which("nekobox") is not None or Path("/opt/nekobox/nekobox.AppImage").exists()),
+        ("control center", Path("/usr/local/bin/sanchos-control-center").exists()),
+    ]
 
     rc, stdout, _ = run(["systemctl", "is-active", "libvirtd"])
     checks.append(("libvirtd active", rc == 0 and stdout == "active"))
 
     for name, status in checks:
-        mark = "ok" if status else "missing"
-        print(f"[{mark}] {name}")
+        print(f"[{'ok' if status else 'missing'}] {name}")
 
     missing = [name for name, status in checks if not status]
     if missing:
         print("\nSome components are missing or inactive.")
         return 1
-
     print("\nEverything required by the current doctor checks looks ready.")
     return 0
 
@@ -228,6 +227,13 @@ def require_virsh() -> bool:
     return True
 
 
+def require_virt_install() -> bool:
+    if shutil.which("virt-install") is None:
+        print("virt-install is not installed or not in PATH")
+        return False
+    return True
+
+
 def cmd_vm_list(_: argparse.Namespace) -> int:
     if not require_virsh():
         return 1
@@ -272,21 +278,57 @@ def cmd_vm_stop(args: argparse.Namespace) -> int:
     return rc
 
 
+def cmd_vm_create(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    if not require_virt_install():
+        return 1
+
+    iso = Path(args.iso).expanduser().resolve()
+    if not iso.exists():
+        print(f"ISO not found: {iso}")
+        return 1
+
+    disk_dir = Path(args.disk_dir).expanduser() if args.disk_dir else DEFAULT_VM_STORAGE
+    disk_dir.mkdir(parents=True, exist_ok=True)
+    disk_path = disk_dir / f"{args.name}.qcow2"
+
+    command = [
+        "virt-install",
+        "--name", args.name,
+        "--memory", str(args.memory),
+        "--vcpus", str(args.vcpus),
+        "--disk", f"path={disk_path},size={args.disk_size},format=qcow2,bus=virtio",
+        "--cdrom", str(iso),
+        "--network", f"network={args.network},model=virtio",
+        "--graphics", "spice",
+        "--video", "qxl",
+        "--os-variant", args.os_variant,
+        "--boot", "uefi",
+        "--noautoconsole",
+    ]
+
+    print("Running:")
+    print(" ".join(command))
+    rc, stdout, stderr = run(command)
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sanchosctl")
     subparsers = parser.add_subparsers(dest="group", required=True)
 
     system = subparsers.add_parser("system")
     system_sub = system.add_subparsers(dest="action", required=True)
-    info = system_sub.add_parser("info")
-    info.set_defaults(func=cmd_system_info)
-    doctor = system_sub.add_parser("doctor")
-    doctor.set_defaults(func=cmd_system_doctor)
+    system_sub.add_parser("info").set_defaults(func=cmd_system_info)
+    system_sub.add_parser("doctor").set_defaults(func=cmd_system_doctor)
 
     profile = subparsers.add_parser("profile")
     profile_sub = profile.add_subparsers(dest="action", required=True)
-    profile_list = profile_sub.add_parser("list")
-    profile_list.set_defaults(func=cmd_profile_list)
+    profile_sub.add_parser("list").set_defaults(func=cmd_profile_list)
     profile_info = profile_sub.add_parser("info")
     profile_info.add_argument("name")
     profile_info.set_defaults(func=cmd_profile_info)
@@ -296,8 +338,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     module = subparsers.add_parser("module")
     module_sub = module.add_subparsers(dest="action", required=True)
-    module_list = module_sub.add_parser("list")
-    module_list.set_defaults(func=cmd_module_list)
+    module_sub.add_parser("list").set_defaults(func=cmd_module_list)
     module_info = module_sub.add_parser("info")
     module_info.add_argument("name")
     module_info.set_defaults(func=cmd_module_info)
@@ -307,8 +348,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     vm = subparsers.add_parser("vm")
     vm_sub = vm.add_subparsers(dest="action", required=True)
-    vm_list = vm_sub.add_parser("list")
-    vm_list.set_defaults(func=cmd_vm_list)
+    vm_sub.add_parser("list").set_defaults(func=cmd_vm_list)
     vm_info = vm_sub.add_parser("info")
     vm_info.add_argument("name")
     vm_info.set_defaults(func=cmd_vm_info)
@@ -318,6 +358,16 @@ def build_parser() -> argparse.ArgumentParser:
     vm_stop = vm_sub.add_parser("stop")
     vm_stop.add_argument("name")
     vm_stop.set_defaults(func=cmd_vm_stop)
+    vm_create = vm_sub.add_parser("create")
+    vm_create.add_argument("name")
+    vm_create.add_argument("--iso", required=True, help="Path to installation ISO")
+    vm_create.add_argument("--memory", type=int, default=4096)
+    vm_create.add_argument("--vcpus", type=int, default=4)
+    vm_create.add_argument("--disk-size", type=int, default=64, help="Disk size in GiB")
+    vm_create.add_argument("--disk-dir", default=str(DEFAULT_VM_STORAGE))
+    vm_create.add_argument("--network", default="default")
+    vm_create.add_argument("--os-variant", default="debian12")
+    vm_create.set_defaults(func=cmd_vm_create)
 
     return parser
 

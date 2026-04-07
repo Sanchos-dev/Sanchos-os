@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "[sanchos-os] postinstall placeholder"
-echo "- refresh branding"
-echo "- seed first-boot markers"
-echo "- prepare control-center hooks"
+if command -v kwriteconfig5 >/dev/null 2>&1; then
+  kwriteconfig5 --file kdeglobals --group KDE --key SingleClick false || true
+fi
+
+echo "sanchos-os post-install hooks completed."
