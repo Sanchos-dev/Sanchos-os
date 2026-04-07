@@ -7,6 +7,6 @@ Rules-Requires-Root: no
 
 Package: sanchos-desktop-virt
 Architecture: all
-Depends: sanchos-core, plasma-desktop, sddm, dolphin, konsole, kate, firefox-esr, network-manager, plasma-nm, pipewire, pipewire-pulse, wireplumber, qemu-kvm, qemu-system, qemu-utils, libvirt-daemon-system, libvirt-clients, virt-manager, virtinst, ovmf, bridge-utils, dnsmasq-base, podman, distrobox
+Depends: sanchos-desktop, qemu-kvm, qemu-system, qemu-utils, libvirt-daemon-system, libvirt-clients, virt-manager, virt-viewer, virtinst, ovmf, bridge-utils, dnsmasq-base, podman, distrobox
 Description: desktop virtualization metapackage for sanchos-os
  Main workstation package set for Plasma, libvirt and container tooling.

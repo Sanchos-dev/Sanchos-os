@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import os
 import platform
+import shlex
 import shutil
 import subprocess
 import sys
@@ -14,6 +15,7 @@ import yaml
 STATE_DIR = Path("/etc/sanchos-os/state")
 ENABLED_MODULES_FILE = STATE_DIR / "enabled-modules"
 DEFAULT_VM_STORAGE = Path("/var/lib/libvirt/images")
+LIBVIRT_DEFAULT_NETWORK = "default"
 
 
 def find_root() -> Path:
@@ -34,6 +36,10 @@ MODULES_DIR = ROOT / "modules"
 def run(command: list[str]) -> tuple[int, str, str]:
     proc = subprocess.run(command, capture_output=True, text=True)
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+
+
+def stream(command: list[str]) -> int:
+    return subprocess.run(command, check=False).returncode
 
 
 def print_header(title: str) -> None:
@@ -62,6 +68,40 @@ def write_enabled_modules(names: list[str]) -> None:
     ENABLED_MODULES_FILE.write_text("\n".join(sorted(set(names))) + "\n")
 
 
+def is_installed() -> bool:
+    return Path("/usr/local/bin/sanchosctl").exists() or Path("/etc/sanchos-os").exists()
+
+
+def read_state_value(name: str, default: str = "") -> str:
+    path = STATE_DIR / name
+    if not path.exists():
+        return default
+    return path.read_text().strip() or default
+
+
+def apt_install(packages: list[str]) -> int:
+    if not packages:
+        return 0
+    rc, _, stderr = run(["apt-get", "update"])
+    if rc != 0:
+        print(stderr)
+        return rc
+    rc, _, stderr = run(["apt-get", "install", "-y", *packages])
+    if rc != 0:
+        print(stderr)
+    return rc
+
+
+def ensure_vm_exists(name: str) -> bool:
+    if not require_virsh():
+        return False
+    rc, _, _ = run(["virsh", "dominfo", name])
+    if rc != 0:
+        print(f"VM not found: {name}")
+        return False
+    return True
+
+
 def cmd_system_info(_: argparse.Namespace) -> int:
     print_header("System information")
     print(f"Hostname: {platform.node()}")
@@ -69,6 +109,7 @@ def cmd_system_info(_: argparse.Namespace) -> int:
     print(f"Machine:  {platform.machine()}")
     print(f"Python:   {platform.python_version()}")
     print(f"Root dir: {ROOT}")
+    print(f"Profile:  {read_state_value('installed-profile', 'unknown')}")
 
     os_release = Path("/etc/os-release")
     if os_release.exists():
@@ -110,6 +151,21 @@ def cmd_system_doctor(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_system_reset(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    uninstall = ROOT / "bootstrap" / "uninstall.sh"
+    if not uninstall.exists():
+        uninstall = Path("/usr/local/share/sanchos-os/uninstall.sh")
+    if not uninstall.exists():
+        print("No uninstall helper found.")
+        return 1
+    if not args.yes:
+        print("This will remove files and packages installed by the bootstrap path.")
+        print("Run again with --yes to continue.")
+        return 1
+    return stream(["bash", str(uninstall)])
+
+
 def cmd_profile_list(_: argparse.Namespace) -> int:
     print_header("Profiles")
     if not PROFILES_DIR.exists():
@@ -146,16 +202,8 @@ def cmd_profile_apply(args: argparse.Namespace) -> int:
     data = load_yaml(path)
     packages = data.get("packages", [])
     modules = data.get("modules", [])
-    if packages:
-        print(f"Installing packages for profile {args.name}...")
-        rc, _, stderr = run(["apt-get", "update"])
-        if rc != 0:
-            print(stderr)
-            return rc
-        rc, _, stderr = run(["apt-get", "install", "-y", *packages])
-        if rc != 0:
-            print(stderr)
-            return rc
+    if apt_install(packages) != 0:
+        return 1
     current_modules = read_enabled_modules()
     write_enabled_modules(current_modules + modules)
     print(f"Applied profile: {args.name}")
@@ -201,16 +249,8 @@ def cmd_module_enable(args: argparse.Namespace) -> int:
     data = load_yaml(path)
     packages = data.get("packages", [])
     services = data.get("services", [])
-    if packages:
-        print(f"Installing packages for module {args.name}...")
-        rc, _, stderr = run(["apt-get", "update"])
-        if rc != 0:
-            print(stderr)
-            return rc
-        rc, _, stderr = run(["apt-get", "install", "-y", *packages])
-        if rc != 0:
-            print(stderr)
-            return rc
+    if apt_install(packages) != 0:
+        return 1
     for service in services:
         run(["systemctl", "enable", service])
         run(["systemctl", "start", service])
@@ -246,7 +286,7 @@ def cmd_vm_list(_: argparse.Namespace) -> int:
 
 
 def cmd_vm_info(args: argparse.Namespace) -> int:
-    if not require_virsh():
+    if not ensure_vm_exists(args.name):
         return 1
     rc, stdout, stderr = run(["virsh", "dominfo", args.name])
     if stdout:
@@ -257,7 +297,7 @@ def cmd_vm_info(args: argparse.Namespace) -> int:
 
 
 def cmd_vm_start(args: argparse.Namespace) -> int:
-    if not require_virsh():
+    if not ensure_vm_exists(args.name):
         return 1
     rc, stdout, stderr = run(["virsh", "start", args.name])
     if stdout:
@@ -268,7 +308,7 @@ def cmd_vm_start(args: argparse.Namespace) -> int:
 
 
 def cmd_vm_stop(args: argparse.Namespace) -> int:
-    if not require_virsh():
+    if not ensure_vm_exists(args.name):
         return 1
     rc, stdout, stderr = run(["virsh", "shutdown", args.name])
     if stdout:
@@ -276,6 +316,35 @@ def cmd_vm_stop(args: argparse.Namespace) -> int:
     if rc != 0 and stderr:
         print(stderr)
     return rc
+
+
+def cmd_vm_delete(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    if not ensure_vm_exists(args.name):
+        return 1
+    if not args.yes:
+        print("Refusing to delete without --yes.")
+        return 1
+    run(["virsh", "destroy", args.name])
+    command = ["virsh", "undefine", args.name]
+    if args.remove_storage:
+        command.append("--remove-all-storage")
+    rc, stdout, stderr = run(command)
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_console(args: argparse.Namespace) -> int:
+    if not ensure_vm_exists(args.name):
+        return 1
+    if shutil.which("virt-viewer"):
+        return stream(["virt-viewer", "--connect", "qemu:///system", args.name])
+    print("virt-viewer is not installed. Falling back to virsh console.")
+    print("Use Ctrl+] to leave the console.")
+    return stream(["virsh", "console", args.name])
 
 
 def cmd_vm_create(args: argparse.Namespace) -> int:
@@ -300,16 +369,67 @@ def cmd_vm_create(args: argparse.Namespace) -> int:
         "--disk", f"path={disk_path},size={args.disk_size},format=qcow2,bus=virtio",
         "--cdrom", str(iso),
         "--network", f"network={args.network},model=virtio",
-        "--graphics", "spice",
-        "--video", "qxl",
+        "--graphics", args.graphics,
+        "--video", args.video,
         "--os-variant", args.os_variant,
         "--boot", "uefi",
         "--noautoconsole",
     ]
 
     print("Running:")
-    print(" ".join(command))
+    print(" ".join(shlex.quote(part) for part in command))
     rc, stdout, stderr = run(command)
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_snapshot_list(args: argparse.Namespace) -> int:
+    if not ensure_vm_exists(args.name):
+        return 1
+    rc, stdout, stderr = run(["virsh", "snapshot-list", args.name])
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_snapshot_create(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    if not ensure_vm_exists(args.name):
+        return 1
+    command = ["virsh", "snapshot-create-as", args.name, args.snapshot]
+    if args.description:
+        command.extend(["--description", args.description])
+    if args.disk_only:
+        command.append("--disk-only")
+    rc, stdout, stderr = run(command)
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_snapshot_revert(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    if not ensure_vm_exists(args.name):
+        return 1
+    rc, stdout, stderr = run(["virsh", "snapshot-revert", args.name, args.snapshot])
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_networks(_: argparse.Namespace) -> int:
+    if not require_virsh():
+        return 1
+    rc, stdout, stderr = run(["virsh", "net-list", "--all"])
     if stdout:
         print(stdout)
     if rc != 0 and stderr:
@@ -325,6 +445,9 @@ def build_parser() -> argparse.ArgumentParser:
     system_sub = system.add_subparsers(dest="action", required=True)
     system_sub.add_parser("info").set_defaults(func=cmd_system_info)
     system_sub.add_parser("doctor").set_defaults(func=cmd_system_doctor)
+    system_reset = system_sub.add_parser("reset")
+    system_reset.add_argument("--yes", action="store_true")
+    system_reset.set_defaults(func=cmd_system_reset)
 
     profile = subparsers.add_parser("profile")
     profile_sub = profile.add_subparsers(dest="action", required=True)
@@ -349,6 +472,7 @@ def build_parser() -> argparse.ArgumentParser:
     vm = subparsers.add_parser("vm")
     vm_sub = vm.add_subparsers(dest="action", required=True)
     vm_sub.add_parser("list").set_defaults(func=cmd_vm_list)
+    vm_sub.add_parser("networks").set_defaults(func=cmd_vm_networks)
     vm_info = vm_sub.add_parser("info")
     vm_info.add_argument("name")
     vm_info.set_defaults(func=cmd_vm_info)
@@ -358,6 +482,14 @@ def build_parser() -> argparse.ArgumentParser:
     vm_stop = vm_sub.add_parser("stop")
     vm_stop.add_argument("name")
     vm_stop.set_defaults(func=cmd_vm_stop)
+    vm_delete = vm_sub.add_parser("delete")
+    vm_delete.add_argument("name")
+    vm_delete.add_argument("--remove-storage", action="store_true")
+    vm_delete.add_argument("--yes", action="store_true")
+    vm_delete.set_defaults(func=cmd_vm_delete)
+    vm_console = vm_sub.add_parser("console")
+    vm_console.add_argument("name")
+    vm_console.set_defaults(func=cmd_vm_console)
     vm_create = vm_sub.add_parser("create")
     vm_create.add_argument("name")
     vm_create.add_argument("--iso", required=True, help="Path to installation ISO")
@@ -365,9 +497,27 @@ def build_parser() -> argparse.ArgumentParser:
     vm_create.add_argument("--vcpus", type=int, default=4)
     vm_create.add_argument("--disk-size", type=int, default=64, help="Disk size in GiB")
     vm_create.add_argument("--disk-dir", default=str(DEFAULT_VM_STORAGE))
-    vm_create.add_argument("--network", default="default")
+    vm_create.add_argument("--network", default=LIBVIRT_DEFAULT_NETWORK)
+    vm_create.add_argument("--graphics", default="spice")
+    vm_create.add_argument("--video", default="qxl")
     vm_create.add_argument("--os-variant", default="debian12")
     vm_create.set_defaults(func=cmd_vm_create)
+
+    vm_snapshot = vm_sub.add_parser("snapshot")
+    vm_snapshot_sub = vm_snapshot.add_subparsers(dest="snapshot_action", required=True)
+    vm_snapshot_list = vm_snapshot_sub.add_parser("list")
+    vm_snapshot_list.add_argument("name")
+    vm_snapshot_list.set_defaults(func=cmd_vm_snapshot_list)
+    vm_snapshot_create = vm_snapshot_sub.add_parser("create")
+    vm_snapshot_create.add_argument("name")
+    vm_snapshot_create.add_argument("snapshot")
+    vm_snapshot_create.add_argument("--description")
+    vm_snapshot_create.add_argument("--disk-only", action="store_true")
+    vm_snapshot_create.set_defaults(func=cmd_vm_snapshot_create)
+    vm_snapshot_revert = vm_snapshot_sub.add_parser("revert")
+    vm_snapshot_revert.add_argument("name")
+    vm_snapshot_revert.add_argument("snapshot")
+    vm_snapshot_revert.set_defaults(func=cmd_vm_snapshot_revert)
 
     return parser
 

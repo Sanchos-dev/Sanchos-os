@@ -14,6 +14,7 @@ packages:
   - pipewire-pulse
   - wireplumber
   - wl-clipboard
+  - xdg-utils
   - xdg-desktop-portal-kde
   - python3-tk
   - qemu-kvm
@@ -22,6 +23,7 @@ packages:
   - libvirt-daemon-system
   - libvirt-clients
   - virt-manager
+  - virt-viewer
   - virtinst
   - ovmf
   - bridge-utils

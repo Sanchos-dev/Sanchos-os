@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Sanchos Control Center
+Comment=Host and virtualization controls
+Exec=/usr/local/bin/sanchos-control-center
+Icon=preferences-system
+Terminal=false
+Categories=Settings;System;

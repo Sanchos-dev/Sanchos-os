@@ -1,0 +1,12 @@
+Source: sanchos-firstboot
+Section: admin
+Priority: optional
+Maintainer: Sanchos <sanchos@sanchos.su>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+
+Package: sanchos-firstboot
+Architecture: all
+Depends: ${misc:Depends}, python3, python3-tk
+Description: first session wizard for sanchos-os
+ Small desktop setup flow for the first login session.

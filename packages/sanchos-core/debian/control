@@ -7,6 +7,6 @@ Rules-Requires-Root: no
 
 Package: sanchos-core
 Architecture: all
-Depends: curl, wget, git, ca-certificates, sudo, python3, python3-yaml
+Depends: curl, wget, git, ca-certificates, sudo, python3, python3-yaml, sanchosctl
 Description: core metapackage for sanchos-os
  Baseline package dependencies and control-plane prerequisites for sanchos-os.

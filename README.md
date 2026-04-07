@@ -25,25 +25,33 @@ The project is built around a desktop-first model with native KVM/libvirt integr
 - `packages/` package sources and packaging scaffolds
 - `configs/` system, desktop, networking and virtualization defaults
 - `firstboot/` first session setup flow
-- `ui/control-center/` early control center prototype
+- `ui/control-center/` local control center
 
 ## Current state
 
-This repository is the early platform scaffold. The main goals right now are:
+The repository has moved past pure documentation and now includes:
 
-- lock down the platform architecture
-- make the bootstrap path reproducible
-- grow `sanchosctl` into a practical host management tool
-- build the first branded desktop session
+- a reproducible bootstrap path
+- an uninstall/reset path for test machines
+- `sanchosctl` with profile, module and VM workflows
+- a first-pass control center
+- a first-pass first-boot flow
+- branding and desktop defaults
 
 ## Quick start
 
 Use a clean Debian 12 VM for initial testing.
 
 ```bash
-sudo ./bootstrap/install.sh desktop-virt
-sudo sanchosctl system doctor
-sudo sanchosctl vm list
+bash ./bootstrap/install.sh desktop-virt
+sanchosctl system doctor
+sanchosctl vm list
+```
+
+To remove the bootstrap content again on a test VM:
+
+```bash
+bash ./bootstrap/uninstall.sh
 ```
 
 ## Profiles
