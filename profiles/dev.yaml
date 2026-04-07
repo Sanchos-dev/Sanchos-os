@@ -1,0 +1,16 @@
+name: dev
+description: Development-focused profile.
+packages:
+  - git
+  - curl
+  - wget
+  - build-essential
+  - python3
+  - python3-venv
+  - python3-pip
+  - podman
+  - distrobox
+modules:
+  - containers
+settings:
+  developer_tooling: true

@@ -1,0 +1,8 @@
+name: monitoring
+description: Optional local and remote monitoring helpers.
+packages:
+  - htop
+  - btop
+services: []
+notes:
+  - Agent-based monitoring belongs in deployment-specific overlays, not in core by default.

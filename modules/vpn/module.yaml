@@ -1,0 +1,8 @@
+name: vpn
+description: Base hook for VPN profile and tunnel integration.
+packages:
+  - wireguard-tools
+  - openvpn
+services: []
+notes:
+  - User or deployment-specific profiles should live outside the core module.

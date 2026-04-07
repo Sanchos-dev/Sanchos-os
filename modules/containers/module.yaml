@@ -1,0 +1,8 @@
+name: containers
+description: Enables local container workflows for desktop and development use.
+packages:
+  - podman
+  - distrobox
+services: []
+notes:
+  - Designed to complement VM workflows rather than replace them.

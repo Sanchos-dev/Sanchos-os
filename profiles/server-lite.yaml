@@ -1,0 +1,13 @@
+name: server-lite
+description: Minimal service-oriented profile for low-overhead systems.
+packages:
+  - openssh-server
+  - curl
+  - wget
+  - podman
+modules:
+  - monitoring
+  - backup
+settings:
+  desktop_environment: none
+  virtualization_enabled: false

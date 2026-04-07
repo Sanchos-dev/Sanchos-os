@@ -1,0 +1,19 @@
+name: desktop
+description: Base desktop profile for daily use.
+packages:
+  - plasma-desktop
+  - sddm
+  - dolphin
+  - konsole
+  - kate
+  - firefox-esr
+  - network-manager
+  - pipewire
+  - pipewire-pulse
+  - wireplumber
+modules:
+  - containers
+settings:
+  desktop_environment: plasma
+  display_manager: sddm
+  virtualization_enabled: false

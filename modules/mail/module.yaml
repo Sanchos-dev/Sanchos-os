@@ -1,0 +1,7 @@
+name: mail
+description: Optional desktop and service-side mail tooling.
+packages:
+  - thunderbird
+services: []
+notes:
+  - Mail transport or personal infrastructure integration should remain optional.

@@ -1,0 +1,33 @@
+name: desktop-virt
+description: Flagship workstation profile with native virtualization support.
+packages:
+  - plasma-desktop
+  - sddm
+  - dolphin
+  - konsole
+  - kate
+  - firefox-esr
+  - network-manager
+  - pipewire
+  - pipewire-pulse
+  - wireplumber
+  - qemu-kvm
+  - qemu-system
+  - libvirt-daemon-system
+  - libvirt-clients
+  - virt-manager
+  - virtinst
+  - ovmf
+  - bridge-utils
+  - dnsmasq-base
+  - podman
+  - distrobox
+modules:
+  - virtualization
+  - containers
+  - backup
+settings:
+  desktop_environment: plasma
+  display_manager: sddm
+  virtualization_enabled: true
+  libvirtd_enabled: true

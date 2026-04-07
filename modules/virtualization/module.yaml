@@ -1,0 +1,16 @@
+name: virtualization
+description: Enables local VM hosting through KVM, QEMU and libvirt.
+packages:
+  - qemu-kvm
+  - qemu-system
+  - libvirt-daemon-system
+  - libvirt-clients
+  - virt-manager
+  - virtinst
+  - ovmf
+  - bridge-utils
+  - dnsmasq-base
+services:
+  - libvirtd
+notes:
+  - Requires CPU virtualization support for best results.

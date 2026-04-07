@@ -1,0 +1,8 @@
+name: backup
+description: Base backup tooling and hooks.
+packages:
+  - rsync
+  - borgbackup
+services: []
+notes:
+  - Future versions can expose backup jobs through sanchosctl and the control center.
