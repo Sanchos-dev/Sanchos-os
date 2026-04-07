@@ -93,7 +93,7 @@ install_icon_theme() {
 
 install_configs() {
   install -d /etc/libvirt/libvirtd.conf.d /etc/qemu /usr/share/sddm/themes/sanchos-os /usr/local/share/sanchos-os
-  install -d /etc/skel/.config /etc/skel/.local/share/color-schemes /etc/skel/.config/i3 /etc/skel/.config/plasma-workspace/env
+  install -d /etc/skel/.config /etc/skel/.local/share/color-schemes /etc/skel/.config/i3 /etc/skel/.config/plasma-workspace/env /etc/skel/.config/Kvantum /etc/skel/.config/gtk-3.0 /etc/skel/.local/share/konsole
   if [[ -f "$ROOT_DIR/configs/libvirt/10-sanchos.conf" ]]; then
     install -m0644 "$ROOT_DIR/configs/libvirt/10-sanchos.conf" /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
   fi
@@ -105,19 +105,32 @@ install_configs() {
       install -m0644 "$ROOT_DIR/configs/plasma/${name}" "/etc/skel/.config/${name}"
     fi
   done
-  if [[ -f "$ROOT_DIR/configs/plasma/SanchosPurple.colors" ]]; then
-    install -m0644 "$ROOT_DIR/configs/plasma/SanchosPurple.colors" /etc/skel/.local/share/color-schemes/SanchosPurple.colors
-  fi
+  for color in SanchosPurple.colors SanchosWarm.colors; do
+    if [[ -f "$ROOT_DIR/configs/plasma/${color}" ]]; then
+      install -m0644 "$ROOT_DIR/configs/plasma/${color}" "/etc/skel/.local/share/color-schemes/${color}"
+    fi
+  done
   if [[ -f "$ROOT_DIR/configs/i3/config" ]]; then
     install -m0644 "$ROOT_DIR/configs/i3/config" /etc/skel/.config/i3/config
   fi
-  cat > /etc/skel/.config/plasma-workspace/env/90-sanchos-wm.sh <<'EOF'
-#!/usr/bin/env sh
-export KDEWM=/usr/bin/i3
-EOF
-  chmod +x /etc/skel/.config/plasma-workspace/env/90-sanchos-wm.sh
+  if [[ -f "$ROOT_DIR/configs/plasma/konsolerc" ]]; then
+    install -m0644 "$ROOT_DIR/configs/plasma/konsolerc" /etc/skel/.config/konsolerc
+  fi
+  if [[ -f "$ROOT_DIR/configs/plasma/SanchosDark.profile" ]]; then
+    install -m0644 "$ROOT_DIR/configs/plasma/SanchosDark.profile" /etc/skel/.local/share/konsole/SanchosDark.profile
+  fi
+  if [[ -f "$ROOT_DIR/configs/plasma/gtk-settings.ini" ]]; then
+    install -m0644 "$ROOT_DIR/configs/plasma/gtk-settings.ini" /etc/skel/.config/gtk-3.0/settings.ini
+  fi
+  if [[ -f "$ROOT_DIR/configs/plasma/kvantum.kvconfig" ]]; then
+    install -m0644 "$ROOT_DIR/configs/plasma/kvantum.kvconfig" /etc/skel/.config/Kvantum/kvantum.kvconfig
+  fi
   install_wallpapers
   install_icon_theme
+  if [[ -d "$ROOT_DIR/themes/kvantum/SanchosRounded" ]]; then
+    install -d /usr/share/Kvantum/SanchosRounded
+    cp -r "$ROOT_DIR/themes/kvantum/SanchosRounded/." /usr/share/Kvantum/SanchosRounded/
+  fi
   if [[ -f "$ROOT_DIR/branding/sddm/Main.qml" ]]; then
     install -m0644 "$ROOT_DIR/branding/sddm/Main.qml" /usr/share/sddm/themes/sanchos-os/Main.qml
   fi
@@ -182,7 +195,7 @@ enable_profile_services() {
     usermod -aG libvirt "$target_user" || true
     usermod -aG kvm "$target_user" || true
     printf '%s\n' "$target_user" > "$STATE_DIR/desktop-user"
-    python3 "$ROOT_DIR/scripts/configure-desktop-style.py" --user "$target_user" --enable-tiling || true
+    python3 "$ROOT_DIR/scripts/configure-desktop-style.py" --user "$target_user" || true
   fi
 }
 

@@ -26,7 +26,7 @@ VALID_WALLPAPER_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg'}
 def scan_wallpapers() -> dict:
     collections: dict[str, list[str]] = {}
     if not WALLPAPER_DIR.exists():
-        return {'default': 'unset', 'collections': {'purple': [], 'default': [], 'fox': []}}
+        return {'default': 'purple/purple0.png', 'collections': {'purple': [], 'default': [], 'fox': []}}
     for path in sorted(WALLPAPER_DIR.rglob('*')):
         if not path.is_file() or path.name == 'index.json':
             continue
@@ -39,7 +39,7 @@ def scan_wallpapers() -> dict:
     ordered = {name: collections.pop(name, []) for name in ['purple', 'default', 'fox']}
     for name in sorted(collections):
         ordered[name] = collections[name]
-    preferred_defaults = ['purple/purple0.png', 'default/wp0.png', 'default/sanchos-default.svg']
+    preferred_defaults = ['purple/purple0.png', 'default/wp0.png']
     available = {item for values in ordered.values() for item in values}
     default_path = 'unset'
     for candidate in preferred_defaults:
@@ -233,7 +233,7 @@ def preferred_visual_user() -> str:
     return os.environ.get('SUDO_USER') or os.environ.get('USER') or 'root'
 
 
-def apply_visual_preset(user: str | None = None, apply_now: bool = False, tiling_enabled: bool = True) -> int:
+def apply_visual_preset(user: str | None = None, apply_now: bool = False, tiling_enabled: bool = False) -> int:
     helper = find_helper('configure-desktop-style.py')
     if helper is None:
         print('Visual preset helper not found.')

@@ -1,5 +1,5 @@
 name: desktop-virt
-description: Flagship workstation profile with Plasma, an i3-backed tiling session, KVM/libvirt, container tooling, soft purple branding and NekoBox.
+description: Flagship workstation profile with Plasma, KVM/libvirt, container tooling, a polished warm-purple shell, optional tiling, rounded styling and NekoBox.
 packages:
   - plasma-desktop
   - sddm
@@ -29,6 +29,11 @@ packages:
   - dnsmasq-base
   - podman
   - distrobox
+  - kvantum
+  - qt5-style-kvantum
+  - kde-config-gtk-style
+  - breeze-gtk-theme
+  - plasma-widgets-addons
   - i3-wm
   - i3status
   - i3lock

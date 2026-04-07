@@ -3,3 +3,6 @@ name=default
 
 [Wallpapers]
 usersWallpapers=/usr/share/backgrounds/sanchos-os
+
+[PlasmaViews]
+PanelVisibility=floating

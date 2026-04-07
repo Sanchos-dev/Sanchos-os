@@ -16,6 +16,11 @@ packages:
   - xdg-utils
   - xdg-desktop-portal-kde
   - python3-tk
+  - kvantum
+  - qt5-style-kvantum
+  - kde-config-gtk-style
+  - breeze-gtk-theme
+  - plasma-widgets-addons
   - i3-wm
   - i3status
   - i3lock

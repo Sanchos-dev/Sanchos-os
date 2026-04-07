@@ -1,32 +1,27 @@
-# Visual customization in v9
+# Visual customization
 
-v9 pushes sanchos-os toward a softer Plasma+i3 hybrid desktop:
+## v10 direction
 
-- purple-first wallpaper defaults (`purple/purple0.png` when present)
-- floating top panel layout for Plasma
-- i3 as the tiling window manager under Plasma on X11 sessions
-- warm purple color scheme and darker translucent surfaces
-- monochrome icon theme scaffold (`sanchos-mono` inherits from `breeze-dark`)
-- SDDM theme tuned toward purple tones
+The default desktop now aims for:
+- a warm dark-purple palette
+- KWin as the polished default compositor
+- a floating top panel
+- Kvantum-based rounded widget styling
+- monochrome icon inheritance
+- optional tiling instead of forced tiling
 
-## Important note about tiling
+## Wallpapers
 
-The tiling path in v9 uses **Plasma + i3**:
+The scaffold does not ship generated placeholder wallpapers anymore. Use the real assets from your repository under `branding/wallpapers/` and rebuild the index:
 
-- Plasma still provides widgets, panel, tray, launchers and the desktop shell
-- i3 manages window tiling and keyboard-driven placement
-
-This keeps the system much closer to a polished desktop than replacing the whole shell with a minimal compositor.
+```bash
+python3 scripts/rebuild-wallpaper-index.py branding/wallpapers
+```
 
 ## Commands
 
 ```bash
-sudo sanchosctl visual apply
-sudo sanchosctl visual panel
-sudo sanchosctl visual tiling enable
-sanchosctl wallpaper apply-default
+sudo sanchosctl wallpaper rescan
+sudo sanchosctl wallpaper set-default purple/purple0.png --apply
+sudo sanchosctl visual apply --apply-now
 ```
-
-## Windows build note
-
-Build the ISO from **WSL Debian** rather than from PowerShell directly. Keep the repository inside the WSL filesystem for best performance.

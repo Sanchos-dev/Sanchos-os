@@ -1,16 +1,22 @@
 [General]
 Name=sanchos-os
-ColorScheme=SanchosPurple
+ColorScheme=SanchosWarm
+XftAntialias=true
+XftHintStyle=hintslight
 
 [KDE]
 LookAndFeelPackage=org.kde.breezedark.desktop
 SingleClick=false
+widgetStyle=kvantum-dark
 
 [Icons]
 Theme=sanchos-mono
 
+[Toolbar style]
+ToolButtonStyle=TextBesideIcon
+
 [WM]
-activeBackground=123,76,212
+activeBackground=139,92,246
 activeForeground=255,255,255
-inactiveBackground=36,28,48
-inactiveForeground=179,170,205
+inactiveBackground=31,26,44
+inactiveForeground=184,176,204

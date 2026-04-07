@@ -3,7 +3,7 @@ set -euo pipefail
 
 user_name="${USER:-$(id -un)}"
 state_dir="${HOME:-$(getent passwd "$user_name" | cut -d: -f6)}/.config/sanchos-os"
-stamp_file="$state_dir/visual-preset-applied"
+stamp_file="$state_dir/visual-preset-applied-v10"
 mkdir -p "$state_dir"
 
 if [[ -f "$stamp_file" ]]; then
@@ -13,4 +13,5 @@ fi
 if [[ -x /usr/local/lib/sanchos-os/configure-desktop-style.py ]]; then
   python3 /usr/local/lib/sanchos-os/configure-desktop-style.py --user "$user_name" --apply-now >/dev/null 2>&1 || true
 fi
-printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$stamp_file"
+printf '%s
+' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$stamp_file"
