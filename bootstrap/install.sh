@@ -74,7 +74,10 @@ install_manifests() {
 install_wallpapers() {
   install -d /usr/share/backgrounds/sanchos-os
   if [[ -d "$ROOT_DIR/branding/wallpapers" ]]; then
-    rsync -a --delete "$ROOT_DIR/branding/wallpapers/" /usr/share/backgrounds/sanchos-os/
+    rsync -a --delete --exclude 'index.json' "$ROOT_DIR/branding/wallpapers/" /usr/share/backgrounds/sanchos-os/
+  fi
+  if [[ -x "$ROOT_DIR/scripts/rebuild-wallpaper-index.py" ]]; then
+    python3 "$ROOT_DIR/scripts/rebuild-wallpaper-index.py" /usr/share/backgrounds/sanchos-os >/dev/null
   fi
 }
 

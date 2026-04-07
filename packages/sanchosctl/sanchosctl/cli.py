@@ -20,6 +20,51 @@ LIBVIRT_DEFAULT_NETWORK = 'default'
 WALLPAPER_INDEX = Path('/usr/share/backgrounds/sanchos-os/index.json')
 
 
+WALLPAPER_DIR = WALLPAPER_INDEX.parent
+VALID_WALLPAPER_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg'}
+
+
+def scan_wallpapers(base: Path = WALLPAPER_DIR) -> dict:
+    collections: dict[str, list[str]] = {}
+    if not base.exists():
+        return {'default': 'unset', 'collections': {}}
+    for path in sorted(base.rglob('*')):
+        if not path.is_file() or path.name == 'index.json':
+            continue
+        if path.suffix.lower() not in VALID_WALLPAPER_EXTS:
+            continue
+        rel = path.relative_to(base).as_posix()
+        parts = rel.split('/')
+        collection = parts[0] if len(parts) > 1 else 'default'
+        collections.setdefault(collection, []).append(rel)
+    ordered = {name: collections.pop(name, []) for name in ['default', 'purple', 'fox']}
+    for name in sorted(collections):
+        ordered[name] = collections[name]
+    default_path = 'unset'
+    if ordered.get('default'):
+        default_path = 'default/sanchos-default.svg' if 'default/sanchos-default.svg' in ordered['default'] else ordered['default'][0]
+    else:
+        for items in ordered.values():
+            if items:
+                default_path = items[0]
+                break
+    return {'default': default_path, 'collections': ordered}
+
+
+def load_wallpaper_index() -> dict:
+    try:
+        if WALLPAPER_INDEX.exists():
+            return json.loads(WALLPAPER_INDEX.read_text())
+    except Exception:
+        pass
+    return scan_wallpapers()
+
+
+def save_wallpaper_index(data: dict) -> None:
+    WALLPAPER_DIR.mkdir(parents=True, exist_ok=True)
+    WALLPAPER_INDEX.write_text(json.dumps(data, indent=2) + '\n')
+
+
 def find_root() -> Path:
     cwd = Path.cwd()
     for base in [cwd, *cwd.parents]:
@@ -132,7 +177,7 @@ def cmd_system_doctor(_: argparse.Namespace) -> int:
         ('podman', shutil.which('podman') is not None),
         ('nekobox', shutil.which('nekobox') is not None or Path('/opt/nekobox/nekobox.AppImage').exists()),
         ('control center', Path('/usr/local/bin/sanchos-control-center').exists()),
-        ('wallpaper index', WALLPAPER_INDEX.exists()),
+        ('wallpaper assets', WALLPAPER_DIR.exists()),
     ]
     rc, stdout, _ = run(['systemctl', 'is-active', 'libvirtd'])
     checks.append(('libvirtd active', rc == 0 and stdout == 'active'))
@@ -430,15 +475,33 @@ def cmd_vm_networks(_: argparse.Namespace) -> int:
 
 def cmd_wallpaper_list(_: argparse.Namespace) -> int:
     print_header('Wallpapers')
-    if not WALLPAPER_INDEX.exists():
-        print('wallpaper index not found')
-        return 1
-    data = json.loads(WALLPAPER_INDEX.read_text())
+    data = load_wallpaper_index()
     print(f"Default: {data.get('default', 'unset')}")
-    for name, items in sorted(data.get('collections', {}).items()):
+    for name, items in data.get('collections', {}).items():
         print(f'\n{name}:')
         for item in items:
             print(f'- {item}')
+    return 0
+
+
+def cmd_wallpaper_rescan(_: argparse.Namespace) -> int:
+    data = scan_wallpapers()
+    save_wallpaper_index(data)
+    total = sum(len(items) for items in data.get('collections', {}).values())
+    print(f'Rebuilt wallpaper index with {total} wallpaper(s).')
+    return 0
+
+
+def cmd_wallpaper_set_default(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    data = load_wallpaper_index()
+    all_items = {item for items in data.get('collections', {}).values() for item in items}
+    if args.path not in all_items:
+        print(f'Wallpaper not found in index: {args.path}')
+        return 1
+    data['default'] = args.path
+    save_wallpaper_index(data)
+    print(f'Set default wallpaper: {args.path}')
     return 0
 
 
@@ -526,6 +589,10 @@ def build_parser() -> argparse.ArgumentParser:
     wallpaper = subparsers.add_parser('wallpaper')
     wallpaper_sub = wallpaper.add_subparsers(dest='action', required=True)
     wallpaper_sub.add_parser('list').set_defaults(func=cmd_wallpaper_list)
+    wallpaper_sub.add_parser('rescan').set_defaults(func=cmd_wallpaper_rescan)
+    wallpaper_set_default = wallpaper_sub.add_parser('set-default')
+    wallpaper_set_default.add_argument('path')
+    wallpaper_set_default.set_defaults(func=cmd_wallpaper_set_default)
     return parser
 
 

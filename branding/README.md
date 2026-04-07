@@ -1,11 +1,25 @@
 # Branding assets
 
-Put wallpapers into `branding/wallpapers/`.
+This directory holds the visual layer for sanchos-os.
 
-Recommended structure:
+## Wallpapers
+
+Put wallpaper sources under:
 
 - `branding/wallpapers/default/`
 - `branding/wallpapers/purple/`
 - `branding/wallpapers/fox/`
 
-The bootstrap path copies this tree into `/usr/share/backgrounds/sanchos-os/` and also installs `branding/wallpapers/index.json` so first boot and the control center can enumerate the available collections.
+Do not hand-edit `branding/wallpapers/index.json` unless you really need to. The install path rebuilds it from the files that actually exist.
+
+Manual rebuild:
+
+```bash
+python3 scripts/rebuild-wallpaper-index.py branding/wallpapers
+```
+
+Installed target path:
+
+```text
+/usr/share/backgrounds/sanchos-os/
+```

@@ -47,6 +47,7 @@ class ControlCenter:
         self.module_list = None
         self.network_list = None
         self.wallpaper_list = None
+        self.wallpaper_default = StringVar(value='Default: unset')
         self._build()
         self.refresh_all()
 
@@ -156,12 +157,17 @@ class ControlCenter:
 
     def _build_appearance(self) -> None:
         Label(self.tab_appearance, text='Wallpapers', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(0, 8))
-        Label(self.tab_appearance, text='Wallpapers are installed into /usr/share/backgrounds/sanchos-os and indexed for first boot and the control center.', wraplength=760, justify='left').pack(anchor='w', pady=(0, 8))
+        Label(self.tab_appearance, text='Wallpapers are installed into /usr/share/backgrounds/sanchos-os and indexed for first boot and the control center.', wraplength=760, justify='left').pack(anchor='w', pady=(0, 4))
+        Label(self.tab_appearance, textvariable=self.wallpaper_default, font=('Sans', 10, 'bold')).pack(anchor='w', pady=(0, 8))
         self.wallpaper_list = ttk.Treeview(self.tab_appearance, columns=('path',), show='headings', height=14)
         self.wallpaper_list.heading('path', text='Installed wallpaper')
         self.wallpaper_list.column('path', width=760)
         self.wallpaper_list.pack(fill=BOTH, expand=False)
-        Button(self.tab_appearance, text='Open wallpaper directory', command=lambda: self.launch(['xdg-open', '/usr/share/backgrounds/sanchos-os'])).pack(anchor='w', pady=8)
+        toolbar = Frame(self.tab_appearance)
+        toolbar.pack(fill=BOTH, pady=8)
+        Button(toolbar, text='Rescan wallpapers', command=self.rescan_wallpapers).pack(side=LEFT)
+        Button(toolbar, text='Set selected as default', command=self.set_selected_wallpaper_default).pack(side=LEFT, padx=(8, 0))
+        Button(toolbar, text='Open wallpaper directory', command=lambda: self.launch(['xdg-open', '/usr/share/backgrounds/sanchos-os'])).pack(side=LEFT, padx=(8, 0))
         Button(self.tab_appearance, text='Open first-boot state', command=lambda: self.show_text_window('First-boot state', read_text(Path.home() / '.config/sanchos-os/firstboot.json', fallback='No first-boot state found.'))).pack(anchor='w', pady=4)
 
     def launch(self, command: list[str]) -> None:
@@ -227,12 +233,46 @@ class ControlCenter:
     def refresh_appearance(self) -> None:
         for item in self.wallpaper_list.get_children():
             self.wallpaper_list.delete(item)
+        output = query(['sanchosctl', 'wallpaper', 'list'], fallback='')
+        default = 'unset'
+        for line in output.splitlines():
+            if line.startswith('Default: '):
+                default = line.removeprefix('Default: ').strip()
+                break
+        self.wallpaper_default.set(f'Default: {default}')
         base = Path('/usr/share/backgrounds/sanchos-os')
         if not base.exists():
             return
         for path in sorted(base.rglob('*')):
-            if path.is_file() and path.suffix.lower() in {'.png', '.jpg', '.jpeg', '.webp', '.svg'}:
+            if path.is_file() and path.suffix.lower() in {'.png', '.jpg', '.jpeg', '.webp', '.svg'} and path.name != 'index.json':
                 self.wallpaper_list.insert('', END, values=(str(path.relative_to(base)),))
+
+    def selected_wallpaper(self) -> str | None:
+        selected = self.wallpaper_list.selection()
+        if not selected:
+            self.status.set('No wallpaper selected')
+            return None
+        values = self.wallpaper_list.item(selected[0], 'values')
+        return values[0] if values else None
+
+    def rescan_wallpapers(self) -> None:
+        if os.geteuid() != 0:
+            self.status.set('Open control center as root to rebuild the index')
+            return
+        output = query(['sanchosctl', 'wallpaper', 'rescan'], fallback='Rescan failed')
+        self.status.set(output.splitlines()[0] if output else 'Rescanned wallpapers')
+        self.refresh_appearance()
+
+    def set_selected_wallpaper_default(self) -> None:
+        path = self.selected_wallpaper()
+        if not path:
+            return
+        if os.geteuid() != 0:
+            self.status.set('Open control center as root to change the default wallpaper')
+            return
+        output = query(['sanchosctl', 'wallpaper', 'set-default', path], fallback='Set default failed')
+        self.status.set(output.splitlines()[0] if output else f'Set default wallpaper: {path}')
+        self.refresh_appearance()
 
     def selected_vm_name(self) -> str | None:
         selected = self.vm_list.selection()

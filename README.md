@@ -69,3 +69,20 @@ The project intentionally starts with standard Debian tooling instead of inventi
 ## ISO builds
 
 A first live ISO build path now exists through `scripts/build-iso.sh`. See `docs/iso-build.md`.
+
+## Wallpaper workflow
+
+Place wallpapers under `branding/wallpapers/<collection>/` and let the install path rebuild `index.json` automatically.
+
+Useful commands:
+
+```bash
+sudo sanchosctl wallpaper rescan
+sanchosctl wallpaper list
+sudo sanchosctl wallpaper set-default purple/purple0.png
+```
+
+## Notes
+
+- `nekobox` and `sanchos-control-center` must be launched inside a graphical KDE session, not from a plain SSH shell.
+- The wallpaper index is rebuilt during install so the control center and first-boot flow stay in sync with the files that are actually present.
