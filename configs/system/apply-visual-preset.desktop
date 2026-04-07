@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=sanchos-os visual preset
+Comment=Apply the default visual preset after Plasma starts
+Exec=/usr/local/lib/sanchos-os/apply-visual-preset.sh
+OnlyShowIn=KDE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

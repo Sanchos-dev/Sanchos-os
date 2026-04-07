@@ -1,0 +1,5 @@
+[Icon Theme]
+Name=Sanchos Mono
+Comment=Monochrome-friendly placeholder theme for sanchos-os
+Inherits=breeze-dark
+Directories=

@@ -11,6 +11,16 @@ from tkinter import ttk
 
 STATE_DIR = Path('/etc/sanchos-os/state')
 WALLPAPER_DIR = Path('/usr/share/backgrounds/sanchos-os')
+PALETTE = {
+    'bg': '#120f18',
+    'panel': '#1d1727',
+    'panel2': '#2a2136',
+    'fg': '#f5f2ff',
+    'muted': '#cabee1',
+    'accent': '#9f6fff',
+    'accent_soft': '#744ed9',
+    'border': '#433056',
+}
 
 
 def query(command: list[str], fallback: str = 'Unavailable') -> str:
@@ -37,35 +47,56 @@ def read_text(path: Path, fallback: str = 'Unavailable') -> str:
         return fallback
 
 
+
+def read_visual_summary() -> str:
+    path = Path.home() / '.config' / 'sanchos-os' / 'visual-preset.json'
+    try:
+        import json
+        data = json.loads(path.read_text())
+        tiling = 'on' if data.get('tiling_enabled') else 'off'
+        return f"Preset: {data.get('color_scheme', 'SanchosPurple')} / panel {data.get('panel_layout', 'top-floating')} / tiling {tiling} / wallpaper {data.get('wallpaper', 'unset')}"
+    except Exception:
+        return 'Preset: warm-purple / top-floating / tiling pending next login'
+
+
 class ControlCenter:
     def __init__(self) -> None:
         self.root = Tk()
         self.root.title('Sanchos Control Center')
-        self.root.geometry('1120x760')
+        self.root.geometry('1240x820')
+        self.root.configure(bg=PALETTE['bg'])
         self.status = StringVar(value='Ready')
-        self.vm_list = None
-        self.module_list = None
-        self.network_list = None
-        self.wallpaper_list = None
         self.wallpaper_default = StringVar(value='Default: unset')
+        self.visual_state = StringVar(value='Preset: loading')
+        self._configure_styles()
         self._build()
         self.refresh_all()
 
+    def _configure_styles(self) -> None:
+        style = ttk.Style(self.root)
+        style.theme_use('clam')
+        style.configure('TNotebook', background=PALETTE['bg'], borderwidth=0)
+        style.configure('TNotebook.Tab', background=PALETTE['panel2'], foreground=PALETTE['fg'], padding=(12, 8))
+        style.map('TNotebook.Tab', background=[('selected', PALETTE['accent_soft'])])
+        style.configure('Treeview', background=PALETTE['panel'], fieldbackground=PALETTE['panel'], foreground=PALETTE['fg'], bordercolor=PALETTE['border'])
+        style.configure('Treeview.Heading', background=PALETTE['panel2'], foreground=PALETTE['fg'])
+
+    def _button(self, parent: Frame, text: str, command, width: int = 22) -> Button:
+        return Button(parent, text=text, command=command, width=width, bg=PALETTE['accent'], fg=PALETTE['fg'], activebackground=PALETTE['accent_soft'], activeforeground=PALETTE['fg'], relief='flat', bd=0, padx=10, pady=8)
+
     def _build(self) -> None:
-        header = Frame(self.root, padx=20, pady=18)
+        header = Frame(self.root, bg=PALETTE['bg'], padx=24, pady=18)
         header.pack(fill=BOTH)
-        Label(header, text='Sanchos Control Center', font=('Sans', 22, 'bold')).pack(anchor='w')
-        Label(header, text='Host, desktop and virtualization controls', font=('Sans', 11)).pack(anchor='w')
+        Label(header, text='Sanchos Control Center', font=('Sans', 28, 'bold'), bg=PALETTE['bg'], fg=PALETTE['fg']).pack(anchor='w')
+        Label(header, text='Warm desktop styling, host controls and virtualization from one place', font=('Sans', 11), bg=PALETTE['bg'], fg=PALETTE['muted']).pack(anchor='w')
 
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill=BOTH, expand=True, padx=16, pady=(0, 12))
-
-        self.tab_overview = Frame(notebook, padx=16, pady=16)
-        self.tab_vms = Frame(notebook, padx=16, pady=16)
-        self.tab_network = Frame(notebook, padx=16, pady=16)
-        self.tab_services = Frame(notebook, padx=16, pady=16)
-        self.tab_appearance = Frame(notebook, padx=16, pady=16)
-
+        self.tab_overview = Frame(notebook, bg=PALETTE['panel'], padx=18, pady=18)
+        self.tab_vms = Frame(notebook, bg=PALETTE['panel'], padx=18, pady=18)
+        self.tab_network = Frame(notebook, bg=PALETTE['panel'], padx=18, pady=18)
+        self.tab_services = Frame(notebook, bg=PALETTE['panel'], padx=18, pady=18)
+        self.tab_appearance = Frame(notebook, bg=PALETTE['panel'], padx=18, pady=18)
         notebook.add(self.tab_overview, text='Overview')
         notebook.add(self.tab_vms, text='VMs')
         notebook.add(self.tab_network, text='Network')
@@ -78,51 +109,46 @@ class ControlCenter:
         self._build_services()
         self._build_appearance()
 
-        footer = Frame(self.root, padx=16, pady=10)
+        footer = Frame(self.root, bg=PALETTE['bg'], padx=16, pady=12)
         footer.pack(fill=BOTH)
-        Label(footer, textvariable=self.status).pack(side=LEFT)
-        Button(footer, text='Refresh', command=self.refresh_all).pack(side=RIGHT)
+        Label(footer, textvariable=self.status, bg=PALETTE['bg'], fg=PALETTE['muted']).pack(side=LEFT)
+        self._button(footer, 'Refresh everything', self.refresh_all, width=20).pack(side=RIGHT)
 
     def _build_overview(self) -> None:
-        left = Frame(self.tab_overview)
+        left = Frame(self.tab_overview, bg=PALETTE['panel'])
         left.pack(side=LEFT, fill=BOTH, expand=True)
-        right = Frame(self.tab_overview)
-        right.pack(side=RIGHT, fill=BOTH, expand=True)
-
-        Label(left, text='Host summary', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(0, 8))
-        self.host_summary = Label(left, justify='left', anchor='w', wraplength=420)
+        right = Frame(self.tab_overview, bg=PALETTE['panel'])
+        right.pack(side=RIGHT, fill=BOTH, expand=True, padx=(24, 0))
+        Label(left, text='Host summary', font=('Sans', 15, 'bold'), bg=PALETTE['panel'], fg=PALETTE['fg']).pack(anchor='w', pady=(0, 8))
+        self.host_summary = Label(left, justify='left', anchor='w', wraplength=480, bg=PALETTE['panel'], fg=PALETTE['fg'])
         self.host_summary.pack(anchor='w')
-
-        Label(left, text='Doctor', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(20, 8))
-        self.doctor_summary = Label(left, justify='left', anchor='w', wraplength=420)
+        Label(left, text='Doctor', font=('Sans', 15, 'bold'), bg=PALETTE['panel'], fg=PALETTE['fg']).pack(anchor='w', pady=(20, 8))
+        self.doctor_summary = Label(left, justify='left', anchor='w', wraplength=480, bg=PALETTE['panel'], fg=PALETTE['fg'])
         self.doctor_summary.pack(anchor='w')
-
-        Label(right, text='Quick actions', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(0, 8))
-        Button(right, text='Open virt-manager', width=28, command=lambda: self.launch(['virt-manager'])).pack(anchor='w', pady=4)
-        Button(right, text='Open NekoBox', width=28, command=lambda: self.launch(['nekobox'])).pack(anchor='w', pady=4)
-        Button(right, text='Open VM networks', width=28, command=lambda: self.show_text_window('VM networks', query(['sanchosctl', 'vm', 'networks']))).pack(anchor='w', pady=4)
-        Button(right, text='Run doctor in terminal', width=28, command=lambda: self.launch(['x-terminal-emulator', '-e', 'sanchosctl', 'system', 'doctor'])).pack(anchor='w', pady=4)
+        Label(right, text='Quick actions', font=('Sans', 15, 'bold'), bg=PALETTE['panel'], fg=PALETTE['fg']).pack(anchor='w', pady=(0, 8))
+        for label, cmd in [
+            ('Open virt-manager', lambda: self.launch(['virt-manager'])),
+            ('Open NekoBox', lambda: self.launch(['nekobox'])),
+            ('Open Plasma wallpaper settings', lambda: self.launch(['kcmshell5', 'wallpaper'])),
+            ('Run visual preset now', self.apply_visual_preset),
+            ('Rebuild top panel', self.apply_panel_layout),
+        ]:
+            self._button(right, label, cmd, width=28).pack(anchor='w', pady=4)
 
     def _build_vms(self) -> None:
-        toolbar = Frame(self.tab_vms)
+        toolbar = Frame(self.tab_vms, bg=PALETTE['panel'])
         toolbar.pack(fill=BOTH, pady=(0, 10))
-        Button(toolbar, text='Refresh', command=self.refresh_vms).pack(side=LEFT, padx=(0, 8))
-        Button(toolbar, text='Start', command=lambda: self.vm_action('start')).pack(side=LEFT, padx=(0, 8))
-        Button(toolbar, text='Stop', command=lambda: self.vm_action('stop')).pack(side=LEFT, padx=(0, 8))
-        Button(toolbar, text='Console', command=lambda: self.vm_action('console', detached=True)).pack(side=LEFT, padx=(0, 8))
-        Button(toolbar, text='Delete', command=self.vm_delete_action).pack(side=LEFT, padx=(0, 8))
-        Button(toolbar, text='Snapshots', command=self.show_snapshot_window).pack(side=LEFT, padx=(0, 8))
-
-        create_row = Frame(self.tab_vms)
+        for label, cmd in [('Refresh', self.refresh_vms), ('Start', lambda: self.vm_action('start')), ('Stop', lambda: self.vm_action('stop')), ('Console', lambda: self.vm_action('console', detached=True)), ('Delete', self.vm_delete_action), ('Snapshots', self.show_snapshot_window)]:
+            self._button(toolbar, label, cmd, width=16).pack(side=LEFT, padx=(0, 8))
+        create_row = Frame(self.tab_vms, bg=PALETTE['panel'])
         create_row.pack(fill=BOTH, pady=(0, 10))
-        Label(create_row, text='Name').pack(side=LEFT)
-        self.vm_name = Entry(create_row, width=18)
+        Label(create_row, text='Name', bg=PALETTE['panel'], fg=PALETTE['fg']).pack(side=LEFT)
+        self.vm_name = Entry(create_row, width=18, bg=PALETTE['panel2'], fg=PALETTE['fg'], insertbackground=PALETTE['fg'])
         self.vm_name.pack(side=LEFT, padx=(6, 10))
-        Label(create_row, text='ISO').pack(side=LEFT)
-        self.vm_iso = Entry(create_row, width=42)
+        Label(create_row, text='ISO', bg=PALETTE['panel'], fg=PALETTE['fg']).pack(side=LEFT)
+        self.vm_iso = Entry(create_row, width=42, bg=PALETTE['panel2'], fg=PALETTE['fg'], insertbackground=PALETTE['fg'])
         self.vm_iso.pack(side=LEFT, padx=(6, 10))
-        Button(create_row, text='Create VM', command=self.create_vm).pack(side=LEFT)
-
+        self._button(create_row, 'Create VM', self.create_vm, width=14).pack(side=LEFT)
         self.vm_list = ttk.Treeview(self.tab_vms, columns=('id', 'name', 'state'), show='headings', height=18)
         for col, width in [('id', 90), ('name', 280), ('state', 220)]:
             self.vm_list.heading(col, text=col.capitalize())
@@ -130,11 +156,10 @@ class ControlCenter:
         self.vm_list.pack(fill=BOTH, expand=True)
 
     def _build_network(self) -> None:
-        toolbar = Frame(self.tab_network)
+        toolbar = Frame(self.tab_network, bg=PALETTE['panel'])
         toolbar.pack(fill=BOTH, pady=(0, 10))
-        Button(toolbar, text='Refresh', command=self.refresh_network).pack(side=LEFT)
-        Button(toolbar, text='Show interfaces', command=lambda: self.show_text_window('Interfaces', query(['ip', '-brief', 'address']))).pack(side=LEFT, padx=(10, 0))
-
+        self._button(toolbar, 'Refresh', self.refresh_network, width=16).pack(side=LEFT)
+        self._button(toolbar, 'Show interfaces', lambda: self.show_text_window('Interfaces', query(['ip', '-brief', 'address'])), width=18).pack(side=LEFT, padx=(10, 0))
         self.network_list = ttk.Treeview(self.tab_network, columns=('item', 'value'), show='headings', height=16)
         self.network_list.heading('item', text='Item')
         self.network_list.heading('value', text='Value')
@@ -143,11 +168,10 @@ class ControlCenter:
         self.network_list.pack(fill=BOTH, expand=True)
 
     def _build_services(self) -> None:
-        toolbar = Frame(self.tab_services)
+        toolbar = Frame(self.tab_services, bg=PALETTE['panel'])
         toolbar.pack(fill=BOTH, pady=(0, 10))
-        Button(toolbar, text='Refresh', command=self.refresh_services).pack(side=LEFT, padx=(0, 8))
-        Button(toolbar, text='Enable selected module', command=self.enable_selected_module).pack(side=LEFT)
-
+        self._button(toolbar, 'Refresh', self.refresh_services, width=16).pack(side=LEFT, padx=(0, 8))
+        self._button(toolbar, 'Enable selected module', self.enable_selected_module, width=22).pack(side=LEFT)
         self.module_list = ttk.Treeview(self.tab_services, columns=('module', 'status'), show='headings', height=16)
         self.module_list.heading('module', text='Module')
         self.module_list.heading('status', text='Status')
@@ -156,25 +180,32 @@ class ControlCenter:
         self.module_list.pack(fill=BOTH, expand=True)
 
     def _build_appearance(self) -> None:
-        Label(self.tab_appearance, text='Wallpapers', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(0, 8))
-        Label(
-            self.tab_appearance,
-            text='Wallpapers are installed into /usr/share/backgrounds/sanchos-os, mirrored into Plasma wallpaper packages, and can be applied directly to the current session.',
-            wraplength=860,
-            justify='left',
-        ).pack(anchor='w', pady=(0, 4))
-        Label(self.tab_appearance, textvariable=self.wallpaper_default, font=('Sans', 10, 'bold')).pack(anchor='w', pady=(0, 8))
+        Label(self.tab_appearance, text='Visual preset', font=('Sans', 15, 'bold'), bg=PALETTE['panel'], fg=PALETTE['fg']).pack(anchor='w', pady=(0, 4))
+        Label(self.tab_appearance, textvariable=self.visual_state, bg=PALETTE['panel'], fg=PALETTE['muted']).pack(anchor='w', pady=(0, 12))
+        Label(self.tab_appearance, text='Wallpapers', font=('Sans', 15, 'bold'), bg=PALETTE['panel'], fg=PALETTE['fg']).pack(anchor='w', pady=(0, 8))
+        Label(self.tab_appearance, text='v9 defaults to a warm purple desktop with a floating top panel, monochrome-friendly icons and Plasma+i3 tiling.', wraplength=940, justify='left', bg=PALETTE['panel'], fg=PALETTE['muted']).pack(anchor='w', pady=(0, 6))
+        Label(self.tab_appearance, textvariable=self.wallpaper_default, font=('Sans', 10, 'bold'), bg=PALETTE['panel'], fg=PALETTE['fg']).pack(anchor='w', pady=(0, 8))
         self.wallpaper_list = ttk.Treeview(self.tab_appearance, columns=('path',), show='headings', height=15)
         self.wallpaper_list.heading('path', text='Installed wallpaper')
-        self.wallpaper_list.column('path', width=820)
+        self.wallpaper_list.column('path', width=940)
         self.wallpaper_list.pack(fill=BOTH, expand=False)
-        toolbar = Frame(self.tab_appearance)
+        toolbar = Frame(self.tab_appearance, bg=PALETTE['panel'])
         toolbar.pack(fill=BOTH, pady=8)
-        Button(toolbar, text='Rescan wallpapers', command=self.rescan_wallpapers).pack(side=LEFT)
-        Button(toolbar, text='Apply selected now', command=self.apply_selected_wallpaper).pack(side=LEFT, padx=(8, 0))
-        Button(toolbar, text='Set selected as default', command=self.set_selected_wallpaper_default).pack(side=LEFT, padx=(8, 0))
-        Button(toolbar, text='Open wallpaper directory', command=lambda: self.launch(['xdg-open', str(WALLPAPER_DIR)])).pack(side=LEFT, padx=(8, 0))
-        Button(toolbar, text='Open first-boot state', command=lambda: self.show_text_window('First-boot state', read_text(Path.home() / '.config/sanchos-os/firstboot.json', fallback='No first-boot state found.'))).pack(side=LEFT, padx=(8, 0))
+        actions = [
+            ('Rescan wallpapers', self.rescan_wallpapers, 18),
+            ('Apply selected now', self.apply_selected_wallpaper, 18),
+            ('Set selected as default', self.set_selected_wallpaper_default, 22),
+            ('Apply visual preset', self.apply_visual_preset, 18),
+            ('Rebuild top panel', self.apply_panel_layout, 18),
+            ('Enable tiling session', self.enable_tiling_session, 20),
+            ('Disable tiling session', self.disable_tiling_session, 20),
+        ]
+        for text, command, width in actions:
+            self._button(toolbar, text, command, width=width).pack(side=LEFT, padx=(0, 8))
+        toolbar2 = Frame(self.tab_appearance, bg=PALETTE['panel'])
+        toolbar2.pack(fill=BOTH, pady=8)
+        self._button(toolbar2, 'Open wallpaper directory', lambda: self.launch(['xdg-open', str(WALLPAPER_DIR)]), 22).pack(side=LEFT)
+        self._button(toolbar2, 'Open first-boot state', lambda: self.show_text_window('First-boot state', read_text(Path.home() / '.config/sanchos-os/firstboot.json', fallback='No first-boot state found.')), 22).pack(side=LEFT, padx=(8, 0))
 
     def launch(self, command: list[str]) -> None:
         ok = run_detached(command)
@@ -188,12 +219,7 @@ class ControlCenter:
         return 'pkexec is not available for privileged actions.'
 
     def refresh_all(self) -> None:
-        self.refresh_overview()
-        self.refresh_vms()
-        self.refresh_network()
-        self.refresh_services()
-        self.refresh_appearance()
-        self.status.set('Refreshed')
+        self.refresh_overview(); self.refresh_vms(); self.refresh_network(); self.refresh_services(); self.refresh_appearance(); self.status.set('Refreshed')
 
     def refresh_overview(self) -> None:
         summary = [
@@ -214,9 +240,8 @@ class ControlCenter:
             if not line.strip():
                 continue
             parts = line.split(None, 2)
-            if len(parts) < 3:
-                continue
-            self.vm_list.insert('', END, values=(parts[0], parts[1], parts[2]))
+            if len(parts) >= 3:
+                self.vm_list.insert('', END, values=(parts[0], parts[1], parts[2]))
 
     def refresh_network(self) -> None:
         for item in self.network_list.get_children():
@@ -253,6 +278,7 @@ class ControlCenter:
                 default = line.removeprefix('Default: ').strip()
                 break
         self.wallpaper_default.set(f'Default: {default}')
+        self.visual_state.set(read_visual_summary())
         if not WALLPAPER_DIR.exists():
             return
         for path in sorted(WALLPAPER_DIR.rglob('*')):
@@ -260,123 +286,130 @@ class ControlCenter:
                 self.wallpaper_list.insert('', END, values=(str(path.relative_to(WALLPAPER_DIR)),))
 
     def selected_wallpaper(self) -> str | None:
-        selected = self.wallpaper_list.selection()
-        if not selected:
-            self.status.set('No wallpaper selected')
+        selection = self.wallpaper_list.selection()
+        if not selection:
+            self.status.set('Select a wallpaper first')
             return None
-        values = self.wallpaper_list.item(selected[0], 'values')
-        return values[0] if values else None
+        return self.wallpaper_list.item(selection[0], 'values')[0]
 
     def rescan_wallpapers(self) -> None:
-        output = self.privileged_query(['sanchosctl', 'wallpaper', 'rescan'], fallback='Rescan failed')
-        self.status.set(output.splitlines()[0] if output else 'Rescanned wallpapers')
+        result = self.privileged_query(['sanchosctl', 'wallpaper', 'rescan'])
+        self.status.set(result.splitlines()[0] if result else 'Wallpaper rescan finished')
         self.refresh_appearance()
 
     def apply_selected_wallpaper(self) -> None:
-        path = self.selected_wallpaper()
-        if not path:
+        value = self.selected_wallpaper()
+        if not value:
             return
-        output = query(['sanchosctl', 'wallpaper', 'apply', path], fallback='Apply failed')
-        self.status.set(output.splitlines()[0] if output else f'Applied {path}')
-        self.refresh_appearance()
+        result = query(['sanchosctl', 'wallpaper', 'apply', value])
+        self.status.set(result.splitlines()[0] if result else 'Wallpaper applied')
 
     def set_selected_wallpaper_default(self) -> None:
-        path = self.selected_wallpaper()
-        if not path:
+        value = self.selected_wallpaper()
+        if not value:
             return
-        default_output = self.privileged_query(['sanchosctl', 'wallpaper', 'set-default', path], fallback='Set default failed')
-        apply_output = query(['sanchosctl', 'wallpaper', 'apply', path], fallback='Apply failed')
-        default_line = default_output.splitlines()[0] if default_output else ''
-        apply_line = apply_output.splitlines()[0] if apply_output else ''
-        if default_line and apply_line:
-            self.status.set(f'{default_line} | {apply_line}')
-        else:
-            self.status.set(default_line or apply_line or f'Updated wallpaper: {path}')
+        result = self.privileged_query(['sanchosctl', 'wallpaper', 'set-default', value, '--apply'])
+        self.status.set(result.splitlines()[0] if result else 'Default wallpaper updated')
         self.refresh_appearance()
 
-    def selected_vm_name(self) -> str | None:
-        selected = self.vm_list.selection()
-        if not selected:
-            self.status.set('No VM selected')
-            return None
-        values = self.vm_list.item(selected[0], 'values')
-        return values[1] if len(values) >= 2 else None
+    def apply_visual_preset(self) -> None:
+        result = self.privileged_query(['sanchosctl', 'visual', 'apply', '--apply-now'])
+        self.status.set(result.splitlines()[0] if result else 'Visual preset applied')
+        self.refresh_appearance()
 
-    def selected_module_name(self) -> str | None:
-        selected = self.module_list.selection()
-        if not selected:
-            self.status.set('No module selected')
-            return None
-        values = self.module_list.item(selected[0], 'values')
-        return values[0] if values else None
+    def apply_panel_layout(self) -> None:
+        result = query(['sanchosctl', 'visual', 'panel'])
+        self.status.set(result.splitlines()[0] if result else 'Panel layout applied')
+
+    def enable_tiling_session(self) -> None:
+        result = self.privileged_query(['sanchosctl', 'visual', 'tiling', 'enable'])
+        self.status.set(result.splitlines()[0] if result else 'Tiling enabled for next login')
+
+    def disable_tiling_session(self) -> None:
+        result = self.privileged_query(['sanchosctl', 'visual', 'tiling', 'disable'])
+        self.status.set(result.splitlines()[0] if result else 'Tiling disabled for next login')
+
+    def enable_selected_module(self) -> None:
+        selection = self.module_list.selection()
+        if not selection:
+            self.status.set('Select a module first')
+            return
+        name = self.module_list.item(selection[0], 'values')[0]
+        result = self.privileged_query(['sanchosctl', 'module', 'enable', name])
+        self.status.set(result.splitlines()[0] if result else f'Enabled module: {name}')
+        self.refresh_services()
 
     def vm_action(self, action: str, detached: bool = False) -> None:
-        name = self.selected_vm_name()
-        if not name:
+        selection = self.vm_list.selection()
+        if not selection:
+            self.status.set('Select a VM first')
             return
-        command = ['sanchosctl', 'vm', action, name]
-        if detached:
-            if not run_detached(['x-terminal-emulator', '-e', *command]):
-                self.status.set('Console launch failed')
+        name = self.vm_list.item(selection[0], 'values')[1]
+        if detached and action == 'console':
+            ok = run_detached(['sanchosctl', 'vm', 'console', name])
+            self.status.set('Launched VM console' if ok else 'Failed to launch console')
             return
-        output = query(command, fallback='Action failed')
-        self.status.set(output.splitlines()[0] if output else f'Ran {action} for {name}')
+        result = query(['sanchosctl', 'vm', action, name])
+        self.status.set(result.splitlines()[0] if result else f'VM action finished: {action}')
         self.refresh_vms()
 
     def vm_delete_action(self) -> None:
-        name = self.selected_vm_name()
-        if not name:
+        selection = self.vm_list.selection()
+        if not selection:
+            self.status.set('Select a VM first')
             return
-        output = self.privileged_query(['sanchosctl', 'vm', 'delete', name, '--yes'], fallback='Delete failed')
-        self.status.set(output.splitlines()[0] if output else f'Deleted {name}')
+        name = self.vm_list.item(selection[0], 'values')[1]
+        result = self.privileged_query(['sanchosctl', 'vm', 'delete', name, '--yes'])
+        self.status.set(result.splitlines()[0] if result else f'Deleted VM: {name}')
         self.refresh_vms()
+
+    def show_snapshot_window(self) -> None:
+        selection = self.vm_list.selection()
+        if not selection:
+            self.status.set('Select a VM first')
+            return
+        name = self.vm_list.item(selection[0], 'values')[1]
+        win = Toplevel(self.root)
+        win.title(f'Snapshots: {name}')
+        win.configure(bg=PALETTE['panel'])
+        text = query(['sanchosctl', 'vm', 'snapshot', 'list', name], fallback='No snapshots')
+        body = ttk.Treeview(win, columns=('text',), show='headings', height=12)
+        body.heading('text', text='Snapshot list')
+        body.column('text', width=600)
+        body.pack(fill=BOTH, expand=True, padx=12, pady=12)
+        for line in text.splitlines():
+            if line.strip():
+                body.insert('', END, values=(line,))
 
     def create_vm(self) -> None:
         name = self.vm_name.get().strip()
         iso = self.vm_iso.get().strip()
         if not name or not iso:
-            self.status.set('Fill VM name and ISO path first')
+            self.status.set('Enter a VM name and ISO path first')
             return
-        output = self.privileged_query(['sanchosctl', 'vm', 'create', name, '--iso', iso], fallback='Create failed')
-        self.status.set(output.splitlines()[0] if output else f'Create launched for {name}')
+        result = self.privileged_query(['sanchosctl', 'vm', 'create', name, iso, '20', '4096', '2'])
+        self.status.set(result.splitlines()[0] if result else f'VM create requested: {name}')
         self.refresh_vms()
 
-    def enable_selected_module(self) -> None:
-        name = self.selected_module_name()
-        if not name:
-            return
-        output = self.privileged_query(['sanchosctl', 'module', 'enable', name], fallback='Enable failed')
-        self.status.set(output.splitlines()[0] if output else f'Enabled {name}')
-        self.refresh_services()
-
-    def show_snapshot_window(self) -> None:
-        name = self.selected_vm_name()
-        if not name:
-            return
-        self.show_text_window(f'Snapshots: {name}', query(['sanchosctl', 'vm', 'snapshot', 'list', name], fallback='No snapshots found.'))
-
     def show_text_window(self, title: str, text: str) -> None:
-        window = Toplevel(self.root)
-        window.title(title)
-        window.geometry('760x480')
-        box = ttk.Treeview(window, columns=('text',), show='headings')
-        box.heading('text', text=title)
-        box.column('text', width=720)
-        box.pack(fill=BOTH, expand=True)
-        for line in text.splitlines() or [text]:
-            box.insert('', END, values=(line,))
-
-    def run(self) -> None:
-        self.root.mainloop()
+        win = Toplevel(self.root)
+        win.title(title)
+        win.configure(bg=PALETTE['panel'])
+        widget = ttk.Treeview(win, columns=('text',), show='headings', height=18)
+        widget.heading('text', text=title)
+        widget.column('text', width=820)
+        widget.pack(fill=BOTH, expand=True, padx=12, pady=12)
+        for line in text.splitlines() or ['']:
+            widget.insert('', END, values=(line,))
 
 
 def main() -> None:
     if not os.environ.get('DISPLAY') and not os.environ.get('WAYLAND_DISPLAY'):
-        print('sanchos-control-center needs a graphical session. Run it inside KDE/Wayland/X11, not from a plain TTY or SSH shell.')
+        print('Sanchos Control Center requires a graphical session. Start it from Plasma, not from a TTY or SSH shell.')
         raise SystemExit(1)
     app = ControlCenter()
-    app.run()
+    app.root.mainloop()
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

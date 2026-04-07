@@ -12,6 +12,8 @@ Put wallpaper sources under:
 
 Do not hand-edit `branding/wallpapers/index.json` unless you really need to. The install path rebuilds it from the files that actually exist.
 
+In v9 the preferred default is `purple/purple0.png` when that file exists.
+
 Manual rebuild in the repository:
 
 ```bash
@@ -23,17 +25,15 @@ Installed target paths:
 ```text
 /usr/share/backgrounds/sanchos-os/
 /usr/share/wallpapers/SanchosOs-*/
+/usr/share/icons/sanchos-mono/
 ```
-
-The first path holds the raw wallpaper assets used by first boot and the control center.
-The second path holds generated Plasma wallpaper packages so the images also show up in the native KDE wallpaper picker.
 
 Useful runtime commands:
 
 ```bash
 sudo sanchosctl wallpaper rescan
 sanchosctl wallpaper list
-sudo sanchosctl wallpaper set-default default/wp0.png
-sanchosctl wallpaper apply default/wp0.png
-sanchosctl wallpaper apply-default
+sudo sanchosctl wallpaper set-default purple/purple0.png --apply
+sudo sanchosctl visual apply
+sudo sanchosctl visual tiling enable
 ```

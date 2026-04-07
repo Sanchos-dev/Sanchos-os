@@ -26,7 +26,7 @@ VALID_WALLPAPER_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg'}
 def scan_wallpapers() -> dict:
     collections: dict[str, list[str]] = {}
     if not WALLPAPER_DIR.exists():
-        return {'default': 'unset', 'collections': {'default': [], 'purple': [], 'fox': []}}
+        return {'default': 'unset', 'collections': {'purple': [], 'default': [], 'fox': []}}
     for path in sorted(WALLPAPER_DIR.rglob('*')):
         if not path.is_file() or path.name == 'index.json':
             continue
@@ -36,16 +36,17 @@ def scan_wallpapers() -> dict:
         parts = rel.split('/')
         collection = parts[0] if len(parts) > 1 else 'default'
         collections.setdefault(collection, []).append(rel)
-    ordered = {name: collections.pop(name, []) for name in ['default', 'purple', 'fox']}
+    ordered = {name: collections.pop(name, []) for name in ['purple', 'default', 'fox']}
     for name in sorted(collections):
         ordered[name] = collections[name]
+    preferred_defaults = ['purple/purple0.png', 'default/wp0.png', 'default/sanchos-default.svg']
+    available = {item for values in ordered.values() for item in values}
     default_path = 'unset'
-    if ordered.get('default'):
-        if 'default/sanchos-default.svg' in ordered['default']:
-            default_path = 'default/sanchos-default.svg'
-        else:
-            default_path = ordered['default'][0]
-    else:
+    for candidate in preferred_defaults:
+        if candidate in available:
+            default_path = candidate
+            break
+    if default_path == 'unset':
         for items in ordered.values():
             if items:
                 default_path = items[0]
@@ -207,6 +208,49 @@ def apply_wallpaper(value: str, quiet: bool = False) -> int:
     return rc
 
 
+def apply_panel_layout(quiet: bool = False) -> int:
+    helper = find_helper('apply-plasma-layout.py')
+    if helper is None:
+        if not quiet:
+            print('Plasma layout helper not found.')
+        return 1
+    command = ['python3', str(helper)]
+    if quiet:
+        command.append('--quiet')
+    rc, stdout, stderr = run(command)
+    if not quiet:
+        if stdout:
+            print(stdout)
+        if rc != 0 and stderr:
+            print(stderr)
+    return rc
+
+
+def preferred_visual_user() -> str:
+    user = read_state_value('desktop-user')
+    if user:
+        return user
+    return os.environ.get('SUDO_USER') or os.environ.get('USER') or 'root'
+
+
+def apply_visual_preset(user: str | None = None, apply_now: bool = False, tiling_enabled: bool = True) -> int:
+    helper = find_helper('configure-desktop-style.py')
+    if helper is None:
+        print('Visual preset helper not found.')
+        return 1
+    actual_user = user or preferred_visual_user()
+    command = ['python3', str(helper), '--user', actual_user]
+    command.append('--enable-tiling' if tiling_enabled else '--disable-tiling')
+    if apply_now:
+        command.append('--apply-now')
+    rc, stdout, stderr = run(command)
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
 # system commands
 
 def cmd_system_info(_: argparse.Namespace) -> int:
@@ -239,10 +283,12 @@ def cmd_system_doctor(_: argparse.Namespace) -> int:
         ('virsh', shutil.which('virsh') is not None),
         ('virt-install', shutil.which('virt-install') is not None),
         ('podman', shutil.which('podman') is not None),
+        ('i3', shutil.which('i3') is not None),
         ('nekobox', shutil.which('nekobox') is not None or Path('/opt/nekobox/nekobox.AppImage').exists()),
         ('control center', Path('/usr/local/bin/sanchos-control-center').exists()),
         ('wallpaper index', WALLPAPER_INDEX.exists()),
         ('wallpaper apply helper', find_helper('apply-plasma-wallpaper.py') is not None),
+        ('visual preset helper', find_helper('configure-desktop-style.py') is not None),
     ]
     rc, stdout, _ = run(['systemctl', 'is-active', 'libvirtd'])
     checks.append(('libvirtd active', rc == 0 and stdout == 'active'))
@@ -460,19 +506,26 @@ def cmd_vm_create(args: argparse.Namespace) -> int:
     require_root_for_mutation()
     if not require_virt_install():
         return 1
-    iso = Path(args.iso).expanduser().resolve()
+    iso_value = args.iso or args.iso_positional
+    if not iso_value:
+        print('An ISO path is required. Use --iso <path> or provide it as the second positional argument.')
+        return 1
+    iso = Path(iso_value).expanduser().resolve()
     if not iso.exists():
         print(f'ISO not found: {iso}')
         return 1
+    memory = args.memory if args.memory is not None else (args.memory_positional or 4096)
+    vcpus = args.vcpus if args.vcpus is not None else (args.vcpus_positional or 4)
+    disk_size = args.disk_size if args.disk_size is not None else (args.disk_size_positional or 64)
     disk_dir = Path(args.disk_dir).expanduser() if args.disk_dir else DEFAULT_VM_STORAGE
     disk_dir.mkdir(parents=True, exist_ok=True)
     disk_path = disk_dir / f'{args.name}.qcow2'
     command = [
         'virt-install',
         '--name', args.name,
-        '--memory', str(args.memory),
-        '--vcpus', str(args.vcpus),
-        '--disk', f'path={disk_path},size={args.disk_size},format=qcow2,bus=virtio',
+        '--memory', str(memory),
+        '--vcpus', str(vcpus),
+        '--disk', f'path={disk_path},size={disk_size},format=qcow2,bus=virtio',
         '--cdrom', str(iso),
         '--network', f'network={args.network},model=virtio',
         '--graphics', args.graphics,
@@ -598,6 +651,25 @@ def cmd_wallpaper_apply_default(args: argparse.Namespace) -> int:
     return apply_wallpaper(target, quiet=args.quiet)
 
 
+def cmd_visual_apply(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    return apply_visual_preset(user=args.user, apply_now=args.apply_now, tiling_enabled=not args.no_tiling)
+
+
+def cmd_visual_panel(args: argparse.Namespace) -> int:
+    return apply_panel_layout(quiet=args.quiet)
+
+
+def cmd_visual_tiling_enable(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    return apply_visual_preset(user=args.user, apply_now=False, tiling_enabled=True)
+
+
+def cmd_visual_tiling_disable(args: argparse.Namespace) -> int:
+    require_root_for_mutation()
+    return apply_visual_preset(user=args.user, apply_now=False, tiling_enabled=False)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog='sanchosctl')
     subparsers = parser.add_subparsers(dest='group', required=True)
@@ -653,10 +725,14 @@ def build_parser() -> argparse.ArgumentParser:
     vm_console.set_defaults(func=cmd_vm_console)
     vm_create = vm_sub.add_parser('create')
     vm_create.add_argument('name')
-    vm_create.add_argument('--iso', required=True, help='Path to installation ISO')
-    vm_create.add_argument('--memory', type=int, default=4096)
-    vm_create.add_argument('--vcpus', type=int, default=4)
-    vm_create.add_argument('--disk-size', type=int, default=64, help='Disk size in GiB')
+    vm_create.add_argument('iso_positional', nargs='?')
+    vm_create.add_argument('disk_size_positional', nargs='?', type=int)
+    vm_create.add_argument('memory_positional', nargs='?', type=int)
+    vm_create.add_argument('vcpus_positional', nargs='?', type=int)
+    vm_create.add_argument('--iso', help='Path to installation ISO')
+    vm_create.add_argument('--memory', type=int)
+    vm_create.add_argument('--vcpus', type=int)
+    vm_create.add_argument('--disk-size', type=int, help='Disk size in GiB')
     vm_create.add_argument('--disk-dir', default=str(DEFAULT_VM_STORAGE))
     vm_create.add_argument('--network', default=LIBVIRT_DEFAULT_NETWORK)
     vm_create.add_argument('--graphics', default='spice')
@@ -695,6 +771,24 @@ def build_parser() -> argparse.ArgumentParser:
     wallpaper_apply_default = wallpaper_sub.add_parser('apply-default')
     wallpaper_apply_default.add_argument('--quiet', action='store_true')
     wallpaper_apply_default.set_defaults(func=cmd_wallpaper_apply_default)
+    visual = subparsers.add_parser('visual')
+    visual_sub = visual.add_subparsers(dest='action', required=True)
+    visual_apply = visual_sub.add_parser('apply')
+    visual_apply.add_argument('--user')
+    visual_apply.add_argument('--apply-now', action='store_true')
+    visual_apply.add_argument('--no-tiling', action='store_true')
+    visual_apply.set_defaults(func=cmd_visual_apply)
+    visual_panel = visual_sub.add_parser('panel')
+    visual_panel.add_argument('--quiet', action='store_true')
+    visual_panel.set_defaults(func=cmd_visual_panel)
+    visual_tiling = visual_sub.add_parser('tiling')
+    visual_tiling_sub = visual_tiling.add_subparsers(dest='tiling_action', required=True)
+    visual_tiling_enable = visual_tiling_sub.add_parser('enable')
+    visual_tiling_enable.add_argument('--user')
+    visual_tiling_enable.set_defaults(func=cmd_visual_tiling_enable)
+    visual_tiling_disable = visual_tiling_sub.add_parser('disable')
+    visual_tiling_disable.add_argument('--user')
+    visual_tiling_disable.set_defaults(func=cmd_visual_tiling_disable)
     return parser
 
 

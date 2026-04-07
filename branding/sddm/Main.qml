@@ -5,49 +5,79 @@ import QtQuick.Layouts 1.15
 Rectangle {
     width: 1920
     height: 1080
-    color: "#0d1017"
+    color: "#120f18"
 
     Image {
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
-        source: "../wallpapers/sanchos-default.svg"
+        source: "/usr/share/backgrounds/sanchos-os/purple/purple0.png"
+        opacity: 0.55
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#120f18" }
+            GradientStop { position: 1.0; color: "#1b1324" }
+        }
+        opacity: 0.82
     }
 
     Rectangle {
         anchors.centerIn: parent
-        width: 480
-        height: 360
-        radius: 20
-        color: "#111724"
-        opacity: 0.9
-        border.color: "#2d3b57"
+        width: 520
+        height: 390
+        radius: 28
+        color: "#1d1727"
+        opacity: 0.94
+        border.color: "#4e3770"
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 32
+            anchors.margins: 34
             spacing: 18
 
             Label {
                 text: "sanchos-os"
-                color: "#f3f6fb"
-                font.pixelSize: 28
+                color: "#f6f2ff"
+                font.pixelSize: 30
                 font.bold: true
             }
 
             Label {
-                text: "Desktop platform with native virtualization"
-                color: "#a9b7cb"
+                text: "Soft purple desktop, native virtualization and a warmer shell."
+                color: "#cdbfe3"
                 wrapMode: Text.WordWrap
                 font.pixelSize: 15
             }
 
-            TextField {
-                placeholderText: "Username"
+            Rectangle {
+                Layout.fillWidth: true
+                height: 44
+                radius: 14
+                color: "#2a2136"
+                TextField {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    placeholderText: "Username"
+                    color: "#f6f2ff"
+                    background: null
+                }
             }
 
-            TextField {
-                placeholderText: "Password"
-                echoMode: TextInput.Password
+            Rectangle {
+                Layout.fillWidth: true
+                height: 44
+                radius: 14
+                color: "#2a2136"
+                TextField {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    placeholderText: "Password"
+                    echoMode: TextInput.Password
+                    color: "#f6f2ff"
+                    background: null
+                }
             }
 
             Button {

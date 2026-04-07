@@ -1,6 +1,5 @@
 name: desktop
-summary: Daily-use Plasma desktop profile.
-description: Plasma desktop with branding, first-boot setup and NekoBox as the default VPN client.
+description: Daily desktop profile with Plasma, the v9 visual preset, NekoBox and an optional tiling-ready i3 session.
 packages:
   - plasma-desktop
   - sddm
@@ -17,10 +16,10 @@ packages:
   - xdg-utils
   - xdg-desktop-portal-kde
   - python3-tk
+  - i3-wm
+  - i3status
+  - i3lock
+  - rofi
 modules:
   - vpn
   - backup
-settings:
-  desktop_environment: plasma
-  display_manager: sddm
-  vpn_client: nekobox

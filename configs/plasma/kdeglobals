@@ -1,16 +1,16 @@
 [General]
 Name=sanchos-os
-ColorScheme=BreezeDark
+ColorScheme=SanchosPurple
 
 [KDE]
 LookAndFeelPackage=org.kde.breezedark.desktop
 SingleClick=false
 
 [Icons]
-Theme=breeze-dark
+Theme=sanchos-mono
 
 [WM]
-activeBackground=27,35,52
-activeForeground=243,246,251
-inactiveBackground=17,23,36
-inactiveForeground=169,183,203
+activeBackground=123,76,212
+activeForeground=255,255,255
+inactiveBackground=36,28,48
+inactiveForeground=179,170,205

@@ -62,7 +62,9 @@ main() {
   remove_path /usr/share/applications/sanchos-control-center.desktop
   remove_path /etc/xdg/autostart/sanchos-firstboot.desktop
   remove_path /etc/xdg/autostart/sanchos-apply-default-wallpaper.desktop
+  remove_path /etc/xdg/autostart/sanchos-apply-visual-preset.desktop
   remove_path /usr/share/backgrounds/sanchos-os
+  remove_path /usr/share/icons/sanchos-mono
   remove_path /usr/share/sddm/themes/sanchos-os
 
   log "Bootstrap content removed"

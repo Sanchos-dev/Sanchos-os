@@ -1,0 +1,11 @@
+[Compositing]
+Enabled=true
+OpenGLIsUnsafe=false
+LatencyPolicy=PreferSmooth
+GLCore=true
+
+[Plugins]
+blurEnabled=true
+
+[Windows]
+BorderlessMaximizedWindows=false

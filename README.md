@@ -1,8 +1,8 @@
 # sanchos-os
 
-sanchos-os is a Debian-based desktop operating system focused on two things:
+sanchos-os is a Debian-based desktop operating system built around two goals:
 
-- a clean, usable workstation experience
+- a warm, polished workstation experience
 - local virtualization and self-hosted workflows without a split-brain UX
 
 The project is built around a desktop-first model with native KVM/libvirt integration, modular features, and a small control plane for common host tasks.
@@ -11,10 +11,12 @@ The project is built around a desktop-first model with native KVM/libvirt integr
 
 - Debian 12 as the initial base
 - Debian 13 as the next platform target
-- KDE Plasma as the primary desktop
+- KDE Plasma as the primary shell
+- Plasma + i3 as the tiling-first desktop session in v9
 - libvirt/KVM/QEMU for virtualization
 - Podman and Distrobox for containers and dev environments
 - NekoBox as the default desktop VPN client
+- warm purple visuals, floating top panel, monochrome-friendly icon theme scaffold
 
 ## Repository layout
 
@@ -33,10 +35,10 @@ The repository now includes:
 
 - a reproducible bootstrap path
 - an uninstall/reset path for test machines
-- `sanchosctl` with profile, module, VM and wallpaper workflows
-- a first-pass control center that can apply wallpapers and drive host tasks
-- a first-pass first-boot flow that writes and applies the selected wallpaper
-- branding, desktop defaults and Plasma wallpaper package sync
+- `sanchosctl` with profile, module, VM, wallpaper and visual workflows
+- a control center that can apply wallpapers, visual presets and host tasks
+- a first-boot flow that writes and applies the selected wallpaper and visual style
+- branding, desktop defaults, Plasma wallpaper package sync and a monochrome icon theme scaffold
 - a live ISO build path through Debian `live-build`
 
 ## Quick start
@@ -46,6 +48,7 @@ Use a clean Debian 12 VM for initial testing.
 ```bash
 bash ./bootstrap/install.sh desktop-virt
 sanchosctl system doctor
+sanchosctl visual apply --apply-now
 sanchosctl vm list
 ```
 
@@ -62,7 +65,7 @@ bash ./bootstrap/uninstall.sh
 - `dev`
 - `server-lite`
 
-## Wallpaper workflow
+## Wallpaper and visual workflow
 
 Place wallpapers under `branding/wallpapers/<collection>/` and let the install path rebuild `index.json` automatically.
 
@@ -71,12 +74,13 @@ Useful commands:
 ```bash
 sudo sanchosctl wallpaper rescan
 sanchosctl wallpaper list
-sudo sanchosctl wallpaper set-default purple/purple0.png
-sanchosctl wallpaper apply purple/purple0.png
-sanchosctl wallpaper apply-default
+sudo sanchosctl wallpaper set-default purple/purple0.png --apply
+sudo sanchosctl visual apply --apply-now
+sudo sanchosctl visual panel
+sudo sanchosctl visual tiling enable
 ```
 
-The install path also mirrors the indexed wallpapers into `/usr/share/wallpapers/SanchosOs-*` so they show up as Plasma wallpaper packages.
+The install path mirrors the indexed wallpapers into `/usr/share/wallpapers/SanchosOs-*` so they show up as Plasma wallpaper packages.
 
 ## ISO builds
 
@@ -95,9 +99,10 @@ Windows host via WSL wrapper:
 powershell -ExecutionPolicy Bypass -File .\scripts\build-iso.ps1 -Distro Debian -Profile desktop-virt
 ```
 
-See `docs/iso-build.md` and `docs/windows-build.md`.
+See `docs/iso-build.md`, `docs/windows-build.md` and `docs/visual-customization.md`.
 
 ## Notes
 
 - `nekobox` and `sanchos-control-center` must be launched inside a graphical KDE session, not from a plain SSH shell.
-- The wallpaper index is rebuilt during install so the control center, first-boot flow and Plasma packages stay in sync with the files that are actually present.
+- v9 defaults to `purple/purple0.png` when that wallpaper exists.
+- the tiling path in v9 uses **Plasma + i3**, not a minimal standalone window manager session.

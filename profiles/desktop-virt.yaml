@@ -1,6 +1,5 @@
 name: desktop-virt
-summary: Desktop workstation with local virtualization.
-description: Flagship workstation profile with Plasma, KVM/libvirt, container tooling, branding and NekoBox.
+description: Flagship workstation profile with Plasma, an i3-backed tiling session, KVM/libvirt, container tooling, soft purple branding and NekoBox.
 packages:
   - plasma-desktop
   - sddm
@@ -30,14 +29,12 @@ packages:
   - dnsmasq-base
   - podman
   - distrobox
+  - i3-wm
+  - i3status
+  - i3lock
+  - rofi
 modules:
   - virtualization
   - containers
   - vpn
   - backup
-settings:
-  desktop_environment: plasma
-  display_manager: sddm
-  virtualization_enabled: true
-  libvirtd_enabled: true
-  vpn_client: nekobox

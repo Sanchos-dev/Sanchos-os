@@ -84,19 +84,40 @@ install_wallpapers() {
   fi
 }
 
+install_icon_theme() {
+  install -d /usr/share/icons/sanchos-mono
+  if [[ -f "$ROOT_DIR/branding/icons/sanchos-mono/index.theme" ]]; then
+    install -m0644 "$ROOT_DIR/branding/icons/sanchos-mono/index.theme" /usr/share/icons/sanchos-mono/index.theme
+  fi
+}
+
 install_configs() {
   install -d /etc/libvirt/libvirtd.conf.d /etc/qemu /usr/share/sddm/themes/sanchos-os /usr/local/share/sanchos-os
+  install -d /etc/skel/.config /etc/skel/.local/share/color-schemes /etc/skel/.config/i3 /etc/skel/.config/plasma-workspace/env
   if [[ -f "$ROOT_DIR/configs/libvirt/10-sanchos.conf" ]]; then
     install -m0644 "$ROOT_DIR/configs/libvirt/10-sanchos.conf" /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
   fi
   if [[ -f "$ROOT_DIR/configs/network/qemu-bridge.conf" ]]; then
     install -m0644 "$ROOT_DIR/configs/network/qemu-bridge.conf" /etc/qemu/bridge.conf
   fi
-  if [[ -f "$ROOT_DIR/configs/plasma/kdeglobals" ]]; then
-    install -d /etc/skel/.config
-    install -m0644 "$ROOT_DIR/configs/plasma/kdeglobals" /etc/skel/.config/kdeglobals
+  for name in kdeglobals kwinrc plasmarc; do
+    if [[ -f "$ROOT_DIR/configs/plasma/${name}" ]]; then
+      install -m0644 "$ROOT_DIR/configs/plasma/${name}" "/etc/skel/.config/${name}"
+    fi
+  done
+  if [[ -f "$ROOT_DIR/configs/plasma/SanchosPurple.colors" ]]; then
+    install -m0644 "$ROOT_DIR/configs/plasma/SanchosPurple.colors" /etc/skel/.local/share/color-schemes/SanchosPurple.colors
   fi
+  if [[ -f "$ROOT_DIR/configs/i3/config" ]]; then
+    install -m0644 "$ROOT_DIR/configs/i3/config" /etc/skel/.config/i3/config
+  fi
+  cat > /etc/skel/.config/plasma-workspace/env/90-sanchos-wm.sh <<'EOF'
+#!/usr/bin/env sh
+export KDEWM=/usr/bin/i3
+EOF
+  chmod +x /etc/skel/.config/plasma-workspace/env/90-sanchos-wm.sh
   install_wallpapers
+  install_icon_theme
   if [[ -f "$ROOT_DIR/branding/sddm/Main.qml" ]]; then
     install -m0644 "$ROOT_DIR/branding/sddm/Main.qml" /usr/share/sddm/themes/sanchos-os/Main.qml
   fi
@@ -118,8 +139,12 @@ install_ui_bits() {
   install -Dm755 "$ROOT_DIR/scripts/apply-plasma-wallpaper.py" /usr/local/lib/sanchos-os/apply-plasma-wallpaper.py
   install -Dm755 "$ROOT_DIR/scripts/install-plasma-wallpaper-packages.py" /usr/local/lib/sanchos-os/install-plasma-wallpaper-packages.py
   install -Dm755 "$ROOT_DIR/scripts/apply-default-wallpaper.sh" /usr/local/lib/sanchos-os/apply-default-wallpaper.sh
+  install -Dm755 "$ROOT_DIR/scripts/apply-plasma-layout.py" /usr/local/lib/sanchos-os/apply-plasma-layout.py
+  install -Dm755 "$ROOT_DIR/scripts/configure-desktop-style.py" /usr/local/lib/sanchos-os/configure-desktop-style.py
+  install -Dm755 "$ROOT_DIR/scripts/apply-visual-preset.sh" /usr/local/lib/sanchos-os/apply-visual-preset.sh
   install -Dm644 "$ROOT_DIR/configs/system/firstboot.desktop" /etc/xdg/autostart/sanchos-firstboot.desktop
   install -Dm644 "$ROOT_DIR/configs/system/apply-default-wallpaper.desktop" /etc/xdg/autostart/sanchos-apply-default-wallpaper.desktop
+  install -Dm644 "$ROOT_DIR/configs/system/apply-visual-preset.desktop" /etc/xdg/autostart/sanchos-apply-visual-preset.desktop
   install -Dm644 "$ROOT_DIR/configs/system/control-center.desktop" /usr/share/applications/sanchos-control-center.desktop
 }
 
@@ -157,6 +182,7 @@ enable_profile_services() {
     usermod -aG libvirt "$target_user" || true
     usermod -aG kvm "$target_user" || true
     printf '%s\n' "$target_user" > "$STATE_DIR/desktop-user"
+    python3 "$ROOT_DIR/scripts/configure-desktop-style.py" --user "$target_user" --enable-tiling || true
   fi
 }
 
@@ -198,6 +224,7 @@ main() {
   run_postinstall
 
   log "Bootstrap finished for profile: $PROFILE"
+  log "The v9 visual preset defaults to purple/purple0.png and a Plasma+i3 tiling session."
   log "Reboot is recommended before regular use."
 }
 

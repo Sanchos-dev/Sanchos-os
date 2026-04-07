@@ -6,7 +6,12 @@ import sys
 from pathlib import Path
 
 VALID_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg'}
-PREFERRED_COLLECTIONS = ['default', 'purple', 'fox']
+PREFERRED_COLLECTIONS = ['purple', 'default', 'fox']
+PREFERRED_DEFAULTS = [
+    'purple/purple0.png',
+    'default/wp0.png',
+    'default/sanchos-default.svg',
+]
 
 
 def collect(base: Path) -> dict:
@@ -27,11 +32,13 @@ def collect(base: Path) -> dict:
     for name in sorted(collections):
         ordered[name] = collections[name]
 
-    default_path = 'default/sanchos-default.svg'
-    if ordered.get('default'):
-        if default_path not in ordered['default']:
-            default_path = ordered['default'][0]
-    else:
+    available = {item for values in ordered.values() for item in values}
+    default_path = 'unset'
+    for candidate in PREFERRED_DEFAULTS:
+        if candidate in available:
+            default_path = candidate
+            break
+    if default_path == 'unset':
         for items in ordered.values():
             if items:
                 default_path = items[0]
