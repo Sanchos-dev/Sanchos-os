@@ -1,10 +1,11 @@
-# Branding
+# Branding assets
 
-This directory contains product-facing visual assets:
+Put wallpapers into `branding/wallpapers/`.
 
-- wallpapers
-- SDDM theme files
-- Plymouth assets
-- icons and logos
+Recommended structure:
 
-The first pass is intentionally minimal. The goal is to define the structure and file ownership before investing in final artwork.
+- `branding/wallpapers/default/`
+- `branding/wallpapers/purple/`
+- `branding/wallpapers/fox/`
+
+The bootstrap path copies this tree into `/usr/share/backgrounds/sanchos-os/` and also installs `branding/wallpapers/index.json` so first boot and the control center can enumerate the available collections.

@@ -47,7 +47,8 @@ install_base_packages() {
     curl \
     wget \
     git \
-    ca-certificates
+    ca-certificates \
+    rsync
 }
 
 install_profile_packages() {
@@ -70,8 +71,15 @@ install_manifests() {
   printf '%s\n' "$PROFILE" > "$STATE_DIR/installed-profile"
 }
 
+install_wallpapers() {
+  install -d /usr/share/backgrounds/sanchos-os
+  if [[ -d "$ROOT_DIR/branding/wallpapers" ]]; then
+    rsync -a --delete "$ROOT_DIR/branding/wallpapers/" /usr/share/backgrounds/sanchos-os/
+  fi
+}
+
 install_configs() {
-  install -d /etc/libvirt/libvirtd.conf.d /etc/qemu /usr/share/backgrounds/sanchos-os /usr/share/sddm/themes/sanchos-os /usr/local/share/sanchos-os
+  install -d /etc/libvirt/libvirtd.conf.d /etc/qemu /usr/share/sddm/themes/sanchos-os /usr/local/share/sanchos-os
   if [[ -f "$ROOT_DIR/configs/libvirt/10-sanchos.conf" ]]; then
     install -m0644 "$ROOT_DIR/configs/libvirt/10-sanchos.conf" /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
   fi
@@ -82,9 +90,7 @@ install_configs() {
     install -d /etc/skel/.config
     install -m0644 "$ROOT_DIR/configs/plasma/kdeglobals" /etc/skel/.config/kdeglobals
   fi
-  if [[ -f "$ROOT_DIR/branding/wallpapers/sanchos-default.svg" ]]; then
-    install -m0644 "$ROOT_DIR/branding/wallpapers/sanchos-default.svg" /usr/share/backgrounds/sanchos-os/sanchos-default.svg
-  fi
+  install_wallpapers
   if [[ -f "$ROOT_DIR/branding/sddm/Main.qml" ]]; then
     install -m0644 "$ROOT_DIR/branding/sddm/Main.qml" /usr/share/sddm/themes/sanchos-os/Main.qml
   fi
@@ -132,6 +138,9 @@ enable_profile_services() {
   local target_user="${SUDO_USER:-${PKEXEC_UID:-}}"
   if [[ -z "$target_user" && -n "${USER:-}" && "$USER" != "root" ]]; then
     target_user="$USER"
+  fi
+  if [[ -z "$target_user" ]]; then
+    target_user="$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1; exit}' /etc/passwd || true)"
   fi
   if [[ -n "$target_user" ]] && id "$target_user" >/dev/null 2>&1; then
     usermod -aG libvirt "$target_user" || true

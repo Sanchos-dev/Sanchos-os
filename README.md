@@ -64,3 +64,8 @@ bash ./bootstrap/uninstall.sh
 ## Notes
 
 The project intentionally starts with standard Debian tooling instead of inventing custom plumbing too early.
+
+
+## ISO builds
+
+A first live ISO build path now exists through `scripts/build-iso.sh`. See `docs/iso-build.md`.

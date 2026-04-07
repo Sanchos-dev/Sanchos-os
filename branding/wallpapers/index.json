@@ -1,0 +1,10 @@
+{
+  "default": "default/sanchos-default.svg",
+  "collections": {
+    "default": [
+      "default/sanchos-default.svg"
+    ],
+    "purple": [],
+    "fox": []
+  }
+}

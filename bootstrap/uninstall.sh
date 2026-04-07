@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-STATE_DIR="/etc/sanchos-os/state"
-
 log() {
   echo "[sanchos-os] $*"
 }
@@ -14,53 +12,52 @@ require_root() {
   fi
 }
 
-read_list_file() {
-  local file="$1"
-  if [[ -f "$file" ]]; then
-    grep -v '^\s*$' "$file" || true
+remove_path() {
+  local target="$1"
+  if [[ -e "$target" || -L "$target" ]]; then
+    rm -rf "$target"
+  fi
+}
+
+remove_profile_packages() {
+  local state_file="/etc/sanchos-os/state/profile-packages"
+  if [[ -f "$state_file" ]]; then
+    mapfile -t packages < "$state_file"
+    if [[ ${#packages[@]} -gt 0 ]]; then
+      log "Removing profile packages"
+      apt-get remove -y "${packages[@]}" || true
+      apt-get autoremove -y || true
+    fi
   fi
 }
 
 remove_external_artifacts() {
-  if grep -qx 'nekobox' "$STATE_DIR/external-artifacts" 2>/dev/null; then
-    rm -f /usr/local/bin/nekobox
-    rm -f /usr/share/applications/nekobox.desktop
-    rm -rf /opt/nekobox
+  if [[ -f /etc/sanchos-os/state/external-artifacts ]]; then
+    if grep -qx 'nekobox' /etc/sanchos-os/state/external-artifacts; then
+      remove_path /opt/nekobox
+      remove_path /usr/local/bin/nekobox
+      remove_path /usr/share/applications/nekobox.desktop
+    fi
   fi
-}
-
-remove_packages() {
-  mapfile -t packages < <(read_list_file "$STATE_DIR/profile-packages")
-  if [[ ${#packages[@]} -gt 0 ]]; then
-    log "Removing profile packages"
-    apt-get remove -y "${packages[@]}" || true
-    apt-get autoremove -y || true
-  fi
-}
-
-remove_system_files() {
-  rm -f /usr/local/bin/sanchosctl
-  rm -f /usr/local/bin/sanchos-control-center
-  rm -f /usr/share/applications/sanchos-control-center.desktop
-  rm -f /usr/local/lib/sanchos-os/firstboot.py
-  rm -f /etc/xdg/autostart/sanchos-firstboot.desktop
-  rm -rf /usr/local/lib/sanchos-os
-  rm -rf /usr/local/share/sanchos-os
-  rm -rf /usr/share/backgrounds/sanchos-os
-  rm -rf /usr/share/sddm/themes/sanchos-os
-  rm -f /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
-  rm -f /etc/qemu/bridge.conf
-  rm -rf /etc/sanchos-os
 }
 
 main() {
   require_root
-  log "Removing external artifacts"
+  remove_profile_packages
   remove_external_artifacts
-  remove_packages
+
   log "Removing installed files"
-  remove_system_files
-  log "sanchos-os bootstrap content removed"
+  remove_path /etc/sanchos-os
+  remove_path /usr/local/bin/sanchosctl
+  remove_path /usr/local/bin/sanchos-control-center
+  remove_path /usr/local/lib/sanchos-os
+  remove_path /usr/local/share/sanchos-os
+  remove_path /usr/share/applications/sanchos-control-center.desktop
+  remove_path /etc/xdg/autostart/sanchos-firstboot.desktop
+  remove_path /usr/share/backgrounds/sanchos-os
+  remove_path /usr/share/sddm/themes/sanchos-os
+
+  log "Bootstrap content removed"
 }
 
 main "$@"
