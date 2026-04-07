@@ -1,42 +1,53 @@
 # sanchos-os
 
-Debian-based desktop platform with native virtualization and modular service integration.
+sanchos-os is a Debian-based desktop operating system with native virtualization and modular service integration.
 
-`sanchos-os` is designed as a polished daily-driver desktop that can also act as a local virtualization host. The project is built around a simple idea: a Linux system should feel visually coherent, stay comfortable for normal desktop work, and expose infrastructure features without turning into a pile of unrelated tools.
+The project aims to combine a clean desktop environment with a local infrastructure workflow: a machine that works as a daily driver, a virtualization host, a container workstation and a control point for optional self-hosted services.
 
-## Direction
+## Current focus
 
-- Debian 12 as the initial base, with Debian 13 as the next target
-- KDE Plasma as the primary desktop environment
-- KVM, QEMU and libvirt as the virtualization foundation
-- Podman and Distrobox for container and development workflows
-- `sanchosctl` as the system control CLI
-- Optional service modules for VPN, mail, backup and monitoring
+The repository currently contains the first project scaffold:
+- roadmap documents
+- profile manifests
+- module manifests
+- bootstrap scripts
+- the first `sanchosctl` CLI skeleton
 
-## Project status
+## Short-term priorities
 
-Early scaffold. The current focus is on architecture, profiles, bootstrap flow and the first working control tool.
-
-## Planned milestones
-
-- `v0.1` prototype on top of a clean Debian 12 install
-- `desktop-virt` profile with working VM stack
-- first usable `sanchosctl`
-- branded desktop baseline
-- initial control-center shell
+1. make bootstrap repeatable on clean Debian 12 systems
+2. mature `desktop-virt` into the main workstation profile
+3. turn `sanchosctl` into the control plane for profiles and modules
+4. package the core pieces as proper Debian packages
+5. start the first native control center prototype
 
 ## Repository layout
 
-- `roadmap/` — product and architecture documents
-- `bootstrap/` — conversion of base Debian into a sanchos-os prototype
-- `profiles/` — installable role definitions
-- `modules/` — optional feature blocks
-- `packages/` — system packages maintained by the project
-- `configs/` — managed configuration templates
-- `branding/` — visual assets
-- `ui/` — graphical management layer
-- `docs/` — implementation notes
+- `roadmap/` — product direction and milestone planning
+- `profiles/` — install roles and package bundles
+- `modules/` — optional features and integrations
+- `bootstrap/` — conversion of base Debian into sanchos-os
+- `packages/` — Debian package sources and project-owned tools
+- `configs/` — configuration templates for system components
+- `docs/` — design notes for packaging, modules and virtualization
 
-## Working rule
+## Bootstrap on a test VM
 
-Do not try to outgrow the architecture too early. The first job is to make a clean, usable workstation with native virtualization. Clustering, HA and bigger orchestration features can come later.
+Use a clean Debian 12 virtual machine and run:
+
+```bash
+sudo ./bootstrap/install.sh desktop-virt
+```
+
+After installation:
+
+```bash
+sanchosctl system info
+sanchosctl system doctor
+sanchosctl profile list
+sanchosctl module list
+```
+
+## Status
+
+This is early infrastructure work. The priority is a clean architecture and a usable bootstrap path, not surface polish.

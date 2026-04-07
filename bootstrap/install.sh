@@ -43,10 +43,14 @@ PY
 }
 
 install_manifests() {
-  install -d /etc/sanchos-os
+  install -d /etc/sanchos-os /etc/sanchos-os/state
   rm -rf /etc/sanchos-os/profiles /etc/sanchos-os/modules
   cp -r "$ROOT_DIR/profiles" /etc/sanchos-os/
   cp -r "$ROOT_DIR/modules" /etc/sanchos-os/
+}
+
+install_sanchosctl() {
+  install -Dm755 "$ROOT_DIR/packages/sanchosctl/sanchosctl/cli.py" /usr/local/bin/sanchosctl
 }
 
 enable_profile_services() {
@@ -64,10 +68,6 @@ enable_profile_services() {
       usermod -aG libvirt "$SUDO_USER" || true
     fi
   fi
-}
-
-install_sanchosctl() {
-  install -Dm755 "$ROOT_DIR/packages/sanchosctl/sanchosctl/cli.py" /usr/local/bin/sanchosctl
 }
 
 main() {
@@ -95,6 +95,7 @@ main() {
   enable_profile_services
 
   log "Bootstrap finished for profile: $PROFILE"
+  log "You can inspect the profile with: sanchosctl profile info $PROFILE"
   log "Reboot is recommended before regular use."
 }
 

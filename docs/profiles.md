@@ -1,21 +1,28 @@
-# Profiles
+# Profile model
+
+## Purpose
 
 Profiles define install roles.
 
+A profile groups packages, modules and defaults that make sense together for a specific system role.
+
 ## Current profiles
 
-### desktop
-Base daily-use desktop profile.
+- `desktop`
+- `desktop-virt`
+- `dev`
+- `server-lite`
 
-### desktop-virt
-Primary workstation profile with virtualization enabled.
+## Design rules
 
-### dev
-Development-focused extension profile.
+- profiles should describe intent clearly
+- profiles should stay readable as plain manifests
+- profiles should be installable through `sanchosctl`
+- profiles should avoid hidden side effects
 
-### server-lite
-Reduced-footprint service profile.
+## Relationship to modules
 
-## Notes
+Profiles describe a complete role.
+Modules describe optional or reusable capabilities.
 
-Profiles describe intent. They are not the final package policy forever, but they should stay readable and predictable.
+A profile can pull in several modules, but the module boundary should remain clean.

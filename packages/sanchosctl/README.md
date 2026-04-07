@@ -1,9 +1,18 @@
 # sanchosctl
 
-Early command-line control plane for sanchos-os.
+`sanchosctl` is the command-line control plane for sanchos-os.
 
 ## Current commands
-- `sanchosctl system info`
-- `sanchosctl system doctor`
-- `sanchosctl profile list`
-- `sanchosctl module list`
+
+- `system info`
+- `system doctor`
+- `profile list`
+- `profile info <name>`
+- `profile apply <name>`
+- `module list`
+- `module info <name>`
+- `module enable <name>`
+
+## Packaging status
+
+This package source is still minimal and should be treated as project scaffolding.

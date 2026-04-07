@@ -1,0 +1,14 @@
+Source: sanchosctl
+Section: admin
+Priority: optional
+Maintainer: Sanchos <sanchos@sanchos.su>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: sanchosctl
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-yaml
+Description: control plane CLI for sanchos-os
+ Minimal command-line utility for inspecting profiles, modules and
+ host readiness in sanchos-os.
