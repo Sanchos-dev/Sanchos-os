@@ -6,7 +6,7 @@ The default desktop now aims for:
 - a warm dark-purple palette
 - KWin as the polished default compositor
 - a floating top panel
-- Kvantum-based rounded widget styling
+- Qt5-style-Kvantum rounded widget styling
 - monochrome icon inheritance
 - optional tiling instead of forced tiling
 

@@ -16,8 +16,8 @@ packages:
   - xdg-utils
   - xdg-desktop-portal-kde
   - python3-tk
-  - kvantum
   - qt5-style-kvantum
+  - qt5-style-kvantum-themes
   - kde-config-gtk-style
   - breeze-gtk-theme
   - plasma-widgets-addons
