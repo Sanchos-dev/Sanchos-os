@@ -1,0 +1,12 @@
+Source: sanchos-core
+Section: metapackages
+Priority: optional
+Maintainer: Sanchos <sanchos@sanchos.su>
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: sanchos-core
+Architecture: all
+Depends: curl, wget, git, ca-certificates, sudo, python3, python3-yaml
+Description: core metapackage for sanchos-os
+ Baseline package dependencies and control-plane prerequisites for sanchos-os.

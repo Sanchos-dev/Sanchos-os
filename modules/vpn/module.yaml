@@ -1,8 +1,13 @@
 name: vpn
-description: Base hook for VPN profile and tunnel integration.
+summary: Desktop and infrastructure VPN integration.
+description: Provides baseline VPN tooling, desktop hooks and the default NekoBox client install path.
 packages:
   - wireguard-tools
   - openvpn
 services: []
+artifacts:
+  - /opt/nekobox/nekobox.AppImage
+  - /usr/local/bin/nekobox
+  - /usr/share/applications/nekobox.desktop
 notes:
-  - User or deployment-specific profiles should live outside the core module.
+  - NekoBox is installed through the project helper script rather than Debian main repositories.

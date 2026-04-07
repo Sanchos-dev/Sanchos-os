@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "post-install hooks are not implemented yet"
+echo "[sanchos-os] postinstall placeholder"
+echo "- refresh branding"
+echo "- seed first-boot markers"
+echo "- prepare control-center hooks"

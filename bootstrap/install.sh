@@ -43,19 +43,39 @@ PY
 }
 
 install_manifests() {
-  install -d /etc/sanchos-os /etc/sanchos-os/state
-  rm -rf /etc/sanchos-os/profiles /etc/sanchos-os/modules
+  install -d /etc/sanchos-os/state
+  rm -rf /etc/sanchos-os/profiles /etc/sanchos-os/modules /etc/sanchos-os/configs
   cp -r "$ROOT_DIR/profiles" /etc/sanchos-os/
   cp -r "$ROOT_DIR/modules" /etc/sanchos-os/
+  cp -r "$ROOT_DIR/configs" /etc/sanchos-os/
+}
+
+install_configs() {
+  install -d /etc/libvirt/libvirtd.conf.d /etc/qemu
+  if [[ -f "$ROOT_DIR/configs/libvirt/10-sanchos.conf" ]]; then
+    install -m0644 "$ROOT_DIR/configs/libvirt/10-sanchos.conf" /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
+  fi
+  if [[ -f "$ROOT_DIR/configs/network/qemu-bridge.conf" ]]; then
+    install -m0644 "$ROOT_DIR/configs/network/qemu-bridge.conf" /etc/qemu/bridge.conf
+  fi
 }
 
 install_sanchosctl() {
   install -Dm755 "$ROOT_DIR/packages/sanchosctl/sanchosctl/cli.py" /usr/local/bin/sanchosctl
 }
 
+install_desktop_vpn_client() {
+  case "$PROFILE" in
+    desktop|desktop-virt|dev)
+      log "Installing NekoBox"
+      "$ROOT_DIR/scripts/install-nekobox.sh"
+      ;;
+  esac
+}
+
 enable_profile_services() {
   case "$PROFILE" in
-    desktop|desktop-virt)
+    desktop|desktop-virt|dev)
       systemctl enable sddm || true
       systemctl enable NetworkManager || true
       ;;
@@ -66,6 +86,7 @@ enable_profile_services() {
     systemctl start libvirtd || true
     if [[ -n "${SUDO_USER:-}" ]] && id "$SUDO_USER" >/dev/null 2>&1; then
       usermod -aG libvirt "$SUDO_USER" || true
+      usermod -aG kvm "$SUDO_USER" || true
     fi
   fi
 }
@@ -85,17 +106,19 @@ main() {
   log "Installing profile packages: $PROFILE"
   install_profile_packages
 
-  log "Installing profile manifests"
+  log "Installing manifests and configs"
   install_manifests
+  install_configs
 
   log "Installing sanchosctl"
   install_sanchosctl
+
+  install_desktop_vpn_client
 
   log "Enabling profile services"
   enable_profile_services
 
   log "Bootstrap finished for profile: $PROFILE"
-  log "You can inspect the profile with: sanchosctl profile info $PROFILE"
   log "Reboot is recommended before regular use."
 }
 

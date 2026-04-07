@@ -1,27 +1,23 @@
-# Packaging notes
+# Packaging
 
-## Package strategy
+The packaging model for early `sanchos-os` is based on standard Debian packages and meta-packages.
 
-sanchos-os should stay aligned with standard Debian packaging.
+## Principles
 
-The project-owned parts should be shipped as normal `.deb` packages through an APT repository rather than custom installers or opaque bundles.
+- stay close to Debian tooling
+- avoid inventing a new packaging layer
+- use meta-packages for profile composition
+- keep project-owned packages small and clear
 
-## Early package set
+## Package families
 
 - `sanchos-core`
-- `sanchos-branding`
-- `sanchos-theme`
 - `sanchosctl`
-- `sanchos-control-center`
 - `sanchos-desktop`
 - `sanchos-desktop-virt`
+- `sanchos-theme`
+- `sanchos-branding`
 
-## Meta-packages vs owned packages
+## NekoBox packaging note
 
-Profiles such as `desktop-virt` can start as manifests and later become meta-packages.
-
-The project should keep its own code in dedicated packages and treat upstream software as dependencies rather than vendored payloads.
-
-## Initial packaging priority
-
-The first package worth maintaining is `sanchosctl`, because it acts as the control plane entry point and is already useful independently of the full UI.
+NekoBox is not assumed to come from Debian main repositories. The repository currently treats it as a managed desktop artifact installed through `scripts/install-nekobox.sh` and the bootstrap flow. The long-term options are either shipping a project package that stages the AppImage cleanly or maintaining a dedicated external repository entry. The first milestone keeps this simple and reproducible. 

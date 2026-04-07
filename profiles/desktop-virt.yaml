@@ -1,5 +1,6 @@
 name: desktop-virt
-description: Flagship workstation profile with native virtualization support.
+summary: Desktop workstation with local virtualization.
+description: Flagship workstation profile with Plasma, KVM/libvirt, container tooling and NekoBox.
 packages:
   - plasma-desktop
   - sddm
@@ -8,11 +9,15 @@ packages:
   - kate
   - firefox-esr
   - network-manager
+  - plasma-nm
   - pipewire
   - pipewire-pulse
   - wireplumber
+  - wl-clipboard
+  - xdg-desktop-portal-kde
   - qemu-kvm
   - qemu-system
+  - qemu-utils
   - libvirt-daemon-system
   - libvirt-clients
   - virt-manager
@@ -25,9 +30,11 @@ packages:
 modules:
   - virtualization
   - containers
+  - vpn
   - backup
 settings:
   desktop_environment: plasma
   display_manager: sddm
   virtualization_enabled: true
   libvirtd_enabled: true
+  vpn_client: nekobox

@@ -1,28 +1,19 @@
-# Profile model
+# Profiles
 
-## Purpose
+Profiles define installable system roles.
 
-Profiles define install roles.
+## `desktop`
+A normal workstation profile with Plasma, desktop conveniences and NekoBox as the default GUI VPN client.
 
-A profile groups packages, modules and defaults that make sense together for a specific system role.
+## `desktop-virt`
+The main project profile. Extends the desktop path with libvirt, KVM, bridge helpers and the local VM toolchain.
 
-## Current profiles
+## `dev`
+Focused on development workflows and container-friendly tooling.
 
-- `desktop`
-- `desktop-virt`
-- `dev`
-- `server-lite`
+## `server-lite`
+Minimal base for remote-first systems.
 
-## Design rules
+## Design note
 
-- profiles should describe intent clearly
-- profiles should stay readable as plain manifests
-- profiles should be installable through `sanchosctl`
-- profiles should avoid hidden side effects
-
-## Relationship to modules
-
-Profiles describe a complete role.
-Modules describe optional or reusable capabilities.
-
-A profile can pull in several modules, but the module boundary should remain clean.
+Profiles should stay readable and boring. A profile is not a giant orchestration engine. It is a clean declaration of package sets, modules and expected settings.

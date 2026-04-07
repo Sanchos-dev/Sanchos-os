@@ -1,0 +1,12 @@
+Source: sanchos-desktop
+Section: metapackages
+Priority: optional
+Maintainer: Sanchos <sanchos@sanchos.su>
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: sanchos-desktop
+Architecture: all
+Depends: sanchos-core, plasma-desktop, sddm, dolphin, konsole, kate, firefox-esr, network-manager, plasma-nm, pipewire, pipewire-pulse, wireplumber, podman, distrobox
+Description: desktop metapackage for sanchos-os
+ Main Plasma workstation package set for sanchos-os.

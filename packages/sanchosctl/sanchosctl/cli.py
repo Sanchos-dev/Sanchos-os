@@ -2,18 +2,17 @@
 from __future__ import annotations
 
 import argparse
+import os
 import platform
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 import yaml
 
 
-ETC_ROOT = Path("/etc/sanchos-os")
-STATE_DIR = ETC_ROOT / "state"
+STATE_DIR = Path("/etc/sanchos-os/state")
 ENABLED_MODULES_FILE = STATE_DIR / "enabled-modules"
 
 
@@ -22,8 +21,8 @@ def find_root() -> Path:
     for base in [cwd, *cwd.parents]:
         if (base / "profiles").is_dir() and (base / "modules").is_dir():
             return base
-    if (ETC_ROOT / "profiles").is_dir() and (ETC_ROOT / "modules").is_dir():
-        return ETC_ROOT
+    if Path("/etc/sanchos-os/profiles").is_dir() and Path("/etc/sanchos-os/modules").is_dir():
+        return Path("/etc/sanchos-os")
     return cwd
 
 
@@ -37,27 +36,19 @@ def run(command: list[str]) -> tuple[int, str, str]:
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
 
 
-
-def run_checked(command: list[str]) -> None:
-    proc = subprocess.run(command)
-    if proc.returncode != 0:
-        raise SystemExit(proc.returncode)
-
-
-
 def print_header(title: str) -> None:
     print(title)
     print("-" * len(title))
 
 
-
-def load_yaml(path: Path) -> dict[str, Any]:
+def load_yaml(path: Path) -> dict:
     with path.open() as fh:
-        data = yaml.safe_load(fh) or {}
-    if not isinstance(data, dict):
-        raise SystemExit(f"Invalid YAML structure: {path}")
-    return data
+        return yaml.safe_load(fh) or {}
 
+
+def require_root_for_mutation() -> None:
+    if os.geteuid() != 0:
+        raise SystemExit("This action requires root.")
 
 
 def read_enabled_modules() -> list[str]:
@@ -66,13 +57,9 @@ def read_enabled_modules() -> list[str]:
     return [line.strip() for line in ENABLED_MODULES_FILE.read_text().splitlines() if line.strip()]
 
 
-
-def require_root() -> None:
-    if hasattr(os, "geteuid") and os.geteuid() != 0:
-        raise SystemExit("This action must be run as root.")
-
-
-import os
+def write_enabled_modules(names: list[str]) -> None:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    ENABLED_MODULES_FILE.write_text("\n".join(sorted(set(names))) + "\n")
 
 
 def cmd_system_info(_: argparse.Namespace) -> int:
@@ -98,7 +85,6 @@ def cmd_system_info(_: argparse.Namespace) -> int:
     return 0
 
 
-
 def cmd_system_doctor(_: argparse.Namespace) -> int:
     print_header("System doctor")
 
@@ -107,6 +93,7 @@ def cmd_system_doctor(_: argparse.Namespace) -> int:
     checks.append(("qemu-system-x86_64", shutil.which("qemu-system-x86_64") is not None))
     checks.append(("virsh", shutil.which("virsh") is not None))
     checks.append(("podman", shutil.which("podman") is not None))
+    checks.append(("nekobox", shutil.which("nekobox") is not None or Path("/opt/nekobox/nekobox.AppImage").exists()))
 
     rc, stdout, _ = run(["systemctl", "is-active", "libvirtd"])
     checks.append(("libvirtd active", rc == 0 and stdout == "active"))
@@ -124,63 +111,56 @@ def cmd_system_doctor(_: argparse.Namespace) -> int:
     return 0
 
 
-
 def cmd_profile_list(_: argparse.Namespace) -> int:
     print_header("Profiles")
     if not PROFILES_DIR.exists():
         print("profiles directory not found")
         return 1
     for item in sorted(PROFILES_DIR.glob("*.yaml")):
-        data = load_yaml(item)
-        description = data.get("description", "")
-        print(f"{item.stem:14} {description}")
+        print(item.stem)
     return 0
-
 
 
 def cmd_profile_info(args: argparse.Namespace) -> int:
     path = PROFILES_DIR / f"{args.name}.yaml"
     if not path.exists():
-        print(f"Unknown profile: {args.name}")
+        print(f"profile not found: {args.name}")
         return 1
-
     data = load_yaml(path)
     print_header(f"Profile: {args.name}")
-    print(data.get("description", "No description."))
+    print(data.get("description") or data.get("summary") or "")
     print("\nPackages:")
-    for pkg in data.get("packages", []):
-        print(f"  - {pkg}")
+    for item in data.get("packages", []):
+        print(f"- {item}")
     print("\nModules:")
-    for module in data.get("modules", []):
-        print(f"  - {module}")
+    for item in data.get("modules", []):
+        print(f"- {item}")
     return 0
-
 
 
 def cmd_profile_apply(args: argparse.Namespace) -> int:
-    require_root()
     path = PROFILES_DIR / f"{args.name}.yaml"
     if not path.exists():
-        print(f"Unknown profile: {args.name}")
+        print(f"profile not found: {args.name}")
         return 1
-
+    require_root_for_mutation()
     data = load_yaml(path)
     packages = data.get("packages", [])
     modules = data.get("modules", [])
-
     if packages:
-        print_header(f"Applying profile: {args.name}")
-        run_checked(["apt-get", "update"])
-        run_checked(["apt-get", "install", "-y", *packages])
-
-    for module in modules:
-        result = cmd_module_enable(argparse.Namespace(name=module))
-        if result != 0:
-            return result
-
-    print("\nProfile applied successfully.")
+        print(f"Installing packages for profile {args.name}...")
+        rc, _, stderr = run(["apt-get", "update"])
+        if rc != 0:
+            print(stderr)
+            return rc
+        rc, _, stderr = run(["apt-get", "install", "-y", *packages])
+        if rc != 0:
+            print(stderr)
+            return rc
+    current_modules = read_enabled_modules()
+    write_enabled_modules(current_modules + modules)
+    print(f"Applied profile: {args.name}")
     return 0
-
 
 
 def cmd_module_list(_: argparse.Namespace) -> int:
@@ -188,68 +168,108 @@ def cmd_module_list(_: argparse.Namespace) -> int:
     if not MODULES_DIR.exists():
         print("modules directory not found")
         return 1
-
     enabled = set(read_enabled_modules())
     for item in sorted(MODULES_DIR.iterdir()):
-        if not item.is_dir():
-            continue
-        marker = "enabled" if item.name in enabled else "available"
-        print(f"{item.name:14} {marker}")
+        if item.is_dir():
+            suffix = " (enabled)" if item.name in enabled else ""
+            print(f"{item.name}{suffix}")
     return 0
-
 
 
 def cmd_module_info(args: argparse.Namespace) -> int:
     path = MODULES_DIR / args.name / "module.yaml"
     if not path.exists():
-        print(f"Unknown module: {args.name}")
+        print(f"module not found: {args.name}")
         return 1
-
     data = load_yaml(path)
     print_header(f"Module: {args.name}")
-    print(data.get("description", "No description."))
+    print(data.get("description") or data.get("summary") or "")
     print("\nPackages:")
-    for pkg in data.get("packages", []):
-        print(f"  - {pkg}")
+    for item in data.get("packages", []):
+        print(f"- {item}")
     print("\nServices:")
-    for service in data.get("services", []):
-        print(f"  - {service}")
-    notes = data.get("notes", [])
-    if notes:
-        print("\nNotes:")
-        for note in notes:
-            print(f"  - {note}")
+    for item in data.get("services", []):
+        print(f"- {item}")
     return 0
-
 
 
 def cmd_module_enable(args: argparse.Namespace) -> int:
-    require_root()
     path = MODULES_DIR / args.name / "module.yaml"
     if not path.exists():
-        print(f"Unknown module: {args.name}")
+        print(f"module not found: {args.name}")
         return 1
-
+    require_root_for_mutation()
     data = load_yaml(path)
     packages = data.get("packages", [])
     services = data.get("services", [])
-
-    print_header(f"Enabling module: {args.name}")
     if packages:
-        run_checked(["apt-get", "install", "-y", *packages])
-
+        print(f"Installing packages for module {args.name}...")
+        rc, _, stderr = run(["apt-get", "update"])
+        if rc != 0:
+            print(stderr)
+            return rc
+        rc, _, stderr = run(["apt-get", "install", "-y", *packages])
+        if rc != 0:
+            print(stderr)
+            return rc
     for service in services:
-        subprocess.run(["systemctl", "enable", service], check=False)
-        subprocess.run(["systemctl", "start", service], check=False)
-
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    enabled = set(read_enabled_modules())
-    enabled.add(args.name)
-    ENABLED_MODULES_FILE.write_text("\n".join(sorted(enabled)) + "\n")
-
-    print("Module enabled.")
+        run(["systemctl", "enable", service])
+        run(["systemctl", "start", service])
+    enabled = read_enabled_modules()
+    write_enabled_modules(enabled + [args.name])
+    print(f"Enabled module: {args.name}")
     return 0
 
+
+def require_virsh() -> bool:
+    if shutil.which("virsh") is None:
+        print("virsh is not installed or not in PATH")
+        return False
+    return True
+
+
+def cmd_vm_list(_: argparse.Namespace) -> int:
+    if not require_virsh():
+        return 1
+    rc, stdout, stderr = run(["virsh", "list", "--all"])
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_info(args: argparse.Namespace) -> int:
+    if not require_virsh():
+        return 1
+    rc, stdout, stderr = run(["virsh", "dominfo", args.name])
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_start(args: argparse.Namespace) -> int:
+    if not require_virsh():
+        return 1
+    rc, stdout, stderr = run(["virsh", "start", args.name])
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def cmd_vm_stop(args: argparse.Namespace) -> int:
+    if not require_virsh():
+        return 1
+    rc, stdout, stderr = run(["virsh", "shutdown", args.name])
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -285,8 +305,21 @@ def build_parser() -> argparse.ArgumentParser:
     module_enable.add_argument("name")
     module_enable.set_defaults(func=cmd_module_enable)
 
-    return parser
+    vm = subparsers.add_parser("vm")
+    vm_sub = vm.add_subparsers(dest="action", required=True)
+    vm_list = vm_sub.add_parser("list")
+    vm_list.set_defaults(func=cmd_vm_list)
+    vm_info = vm_sub.add_parser("info")
+    vm_info.add_argument("name")
+    vm_info.set_defaults(func=cmd_vm_info)
+    vm_start = vm_sub.add_parser("start")
+    vm_start.add_argument("name")
+    vm_start.set_defaults(func=cmd_vm_start)
+    vm_stop = vm_sub.add_parser("stop")
+    vm_stop.add_argument("name")
+    vm_stop.set_defaults(func=cmd_vm_stop)
 
+    return parser
 
 
 def main(argv: list[str] | None = None) -> int:

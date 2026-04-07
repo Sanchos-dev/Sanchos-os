@@ -4,21 +4,22 @@ set -euo pipefail
 python3 - <<'PY'
 from pathlib import Path
 import sys
+import yaml
 
-try:
-    import yaml
-except ImportError:
-    print("python3-yaml is required")
+root = Path('.')
+paths = list(root.glob('profiles/*.yaml')) + list(root.glob('modules/*/module.yaml'))
+errors = []
+for path in paths:
+    try:
+        with path.open() as fh:
+            yaml.safe_load(fh)
+    except Exception as exc:
+        errors.append(f"{path}: {exc}")
+
+if errors:
+    for line in errors:
+        print(line, file=sys.stderr)
     sys.exit(1)
 
-failed = False
-for path in Path('.').rglob('*.yaml'):
-    try:
-        yaml.safe_load(path.read_text())
-        print(f"ok  {path}")
-    except Exception as exc:
-        failed = True
-        print(f"bad {path}: {exc}")
-
-sys.exit(1 if failed else 0)
+print(f"validated {len(paths)} yaml files")
 PY

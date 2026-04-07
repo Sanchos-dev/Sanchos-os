@@ -1,31 +1,30 @@
-# Module model
+# Modules
 
-## Purpose
-
-Modules provide optional system capabilities without forcing them into the core product.
-
-A module can install packages, enable services and expose a stable name for higher-level tooling.
+Modules are optional feature blocks that can be enabled on top of a profile.
 
 ## Rules
 
-- every module must have a `module.yaml`
-- modules must be understandable without reading shell scripts
-- personal infrastructure must never be hardcoded into the core modules
-- modules should be composable with profiles
+- a module owns a focused concern
+- a module may depend on packages, services and config templates
+- a module should be reversible where practical
+- personal infrastructure is modeled as modules or overlays, not as hardcoded core behavior
 
-## Current layout
+## Current modules
 
-Each module currently defines:
-- `name`
-- `description`
-- `packages`
-- `services`
-- `notes`
+### `virtualization`
+Host-side VM stack based on libvirt.
 
-## Planned additions
+### `containers`
+Podman and Distrobox workflows.
 
-Later revisions can add:
-- dependency relationships
-- post-install hooks
-- rollback actions
-- UI metadata for the control center
+### `vpn`
+Base VPN tooling plus the project default desktop client path via NekoBox.
+
+### `backup`
+Reserved for backup integration.
+
+### `monitoring`
+Reserved for host and service monitoring.
+
+### `mail`
+Reserved for mail-related tooling or user workflow integration.

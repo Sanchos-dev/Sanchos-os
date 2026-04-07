@@ -1,8 +1,10 @@
 name: virtualization
-description: Enables local VM hosting through KVM, QEMU and libvirt.
+summary: Local VM host functionality.
+description: Enables the host-side virtualization stack used by desktop-virt systems.
 packages:
   - qemu-kvm
   - qemu-system
+  - qemu-utils
   - libvirt-daemon-system
   - libvirt-clients
   - virt-manager
@@ -12,5 +14,8 @@ packages:
   - dnsmasq-base
 services:
   - libvirtd
+artifacts:
+  - /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
+  - /etc/qemu/bridge.conf
 notes:
-  - Requires CPU virtualization support for best results.
+  - The first iteration uses libvirt and virsh rather than a custom management daemon.

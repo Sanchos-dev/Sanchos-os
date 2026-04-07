@@ -1,18 +1,22 @@
 # sanchosctl
 
-`sanchosctl` is the command-line control plane for sanchos-os.
+`sanchosctl` is the early command-line control plane for `sanchos-os`.
 
 ## Current commands
 
-- `system info`
-- `system doctor`
-- `profile list`
-- `profile info <name>`
-- `profile apply <name>`
-- `module list`
-- `module info <name>`
-- `module enable <name>`
+- `sanchosctl system info`
+- `sanchosctl system doctor`
+- `sanchosctl profile list`
+- `sanchosctl profile info <name>`
+- `sanchosctl profile apply <name>`
+- `sanchosctl module list`
+- `sanchosctl module info <name>`
+- `sanchosctl module enable <name>`
+- `sanchosctl vm list`
+- `sanchosctl vm info <name>`
+- `sanchosctl vm start <name>`
+- `sanchosctl vm stop <name>`
 
-## Packaging status
+## Notes
 
-This package source is still minimal and should be treated as project scaffolding.
+The current version is intentionally small. It wraps only the workflows the repository already defines.

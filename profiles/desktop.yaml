@@ -1,5 +1,6 @@
 name: desktop
-description: Base desktop profile for daily use.
+summary: Daily-driver desktop profile.
+description: Standard workstation profile with Plasma, sane defaults and the default desktop VPN client.
 packages:
   - plasma-desktop
   - sddm
@@ -8,12 +9,18 @@ packages:
   - kate
   - firefox-esr
   - network-manager
+  - plasma-nm
   - pipewire
   - pipewire-pulse
   - wireplumber
+  - wl-clipboard
+  - xdg-desktop-portal-kde
+  - podman
+  - distrobox
 modules:
+  - vpn
   - containers
 settings:
   desktop_environment: plasma
   display_manager: sddm
-  virtualization_enabled: false
+  vpn_client: nekobox

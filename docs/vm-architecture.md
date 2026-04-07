@@ -1,27 +1,48 @@
-# VM architecture notes
+# VM architecture
 
-## Goal
+## Purpose
 
-Virtualization is a first-class part of sanchos-os, but the first milestone should stay focused on local single-node workflows.
+The first virtualization layer in `sanchos-os` is intentionally conservative. The goal is to expose a reliable local VM host on top of Debian without inventing another management stack too early.
 
 ## Stack
 
 - KVM
 - QEMU
 - libvirt
-- OVMF
+- virsh
 - virt-install
-- virt-manager as a companion tool
+- virt-manager
+- OVMF
 
-## Initial use cases
+## Host model
 
-- run Linux guests locally
-- keep separate dev and test environments
-- build disposable lab machines
-- use bridged or NAT networking from a desktop host
+The host stays a regular desktop system. Virtualization is treated as a native subsystem, not as a separate appliance mode.
 
-## Product direction
+## Network modes
 
-The long-term objective is a desktop-oriented virtualization experience with system-integrated networking, storage and resource management.
+### Default NAT
+Works out of the box and is the default path for early installs.
 
-The short-term objective is reliability, not feature count.
+### Bridge mode
+Available for desktop-virt systems where guests need to be visible on the local network.
+
+The first repository version includes baseline bridge configuration templates under `configs/network/` and `configs/libvirt/`.
+
+## CLI model
+
+` sanchosctl vm ... ` wraps a small subset of `virsh` so routine actions do not require raw command memorization.
+
+Supported initial actions:
+- `sanchosctl vm list`
+- `sanchosctl vm start <name>`
+- `sanchosctl vm stop <name>`
+- `sanchosctl vm info <name>`
+
+## Later work
+
+Later milestones can add:
+- templates
+- image library handling
+- snapshot wrappers
+- storage pool management
+- a graphical virtualization panel
