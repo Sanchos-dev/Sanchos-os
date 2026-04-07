@@ -29,14 +29,15 @@ The project is built around a desktop-first model with native KVM/libvirt integr
 
 ## Current state
 
-The repository has moved past pure documentation and now includes:
+The repository now includes:
 
 - a reproducible bootstrap path
 - an uninstall/reset path for test machines
-- `sanchosctl` with profile, module and VM workflows
-- a first-pass control center
-- a first-pass first-boot flow
-- branding and desktop defaults
+- `sanchosctl` with profile, module, VM and wallpaper workflows
+- a first-pass control center that can apply wallpapers and drive host tasks
+- a first-pass first-boot flow that writes and applies the selected wallpaper
+- branding, desktop defaults and Plasma wallpaper package sync
+- a live ISO build path through Debian `live-build`
 
 ## Quick start
 
@@ -61,15 +62,6 @@ bash ./bootstrap/uninstall.sh
 - `dev`
 - `server-lite`
 
-## Notes
-
-The project intentionally starts with standard Debian tooling instead of inventing custom plumbing too early.
-
-
-## ISO builds
-
-A first live ISO build path now exists through `scripts/build-iso.sh`. See `docs/iso-build.md`.
-
 ## Wallpaper workflow
 
 Place wallpapers under `branding/wallpapers/<collection>/` and let the install path rebuild `index.json` automatically.
@@ -80,9 +72,32 @@ Useful commands:
 sudo sanchosctl wallpaper rescan
 sanchosctl wallpaper list
 sudo sanchosctl wallpaper set-default purple/purple0.png
+sanchosctl wallpaper apply purple/purple0.png
+sanchosctl wallpaper apply-default
 ```
+
+The install path also mirrors the indexed wallpapers into `/usr/share/wallpapers/SanchosOs-*` so they show up as Plasma wallpaper packages.
+
+## ISO builds
+
+Linux and WSL build paths exist.
+
+Linux:
+
+```bash
+sudo bash scripts/setup-build-deps.sh
+sudo bash scripts/build-iso.sh build/live-build desktop-virt
+```
+
+Windows host via WSL wrapper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\build-iso.ps1 -Distro Debian -Profile desktop-virt
+```
+
+See `docs/iso-build.md` and `docs/windows-build.md`.
 
 ## Notes
 
 - `nekobox` and `sanchos-control-center` must be launched inside a graphical KDE session, not from a plain SSH shell.
-- The wallpaper index is rebuilt during install so the control center and first-boot flow stay in sync with the files that are actually present.
+- The wallpaper index is rebuilt during install so the control center, first-boot flow and Plasma packages stay in sync with the files that are actually present.

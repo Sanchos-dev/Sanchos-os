@@ -72,12 +72,15 @@ install_manifests() {
 }
 
 install_wallpapers() {
-  install -d /usr/share/backgrounds/sanchos-os
+  install -d /usr/share/backgrounds/sanchos-os /usr/share/wallpapers
   if [[ -d "$ROOT_DIR/branding/wallpapers" ]]; then
     rsync -a --delete --exclude 'index.json' "$ROOT_DIR/branding/wallpapers/" /usr/share/backgrounds/sanchos-os/
   fi
   if [[ -x "$ROOT_DIR/scripts/rebuild-wallpaper-index.py" ]]; then
     python3 "$ROOT_DIR/scripts/rebuild-wallpaper-index.py" /usr/share/backgrounds/sanchos-os >/dev/null
+  fi
+  if [[ -x "$ROOT_DIR/scripts/install-plasma-wallpaper-packages.py" ]]; then
+    python3 "$ROOT_DIR/scripts/install-plasma-wallpaper-packages.py" /usr/share/backgrounds/sanchos-os /usr/share/wallpapers >/dev/null || true
   fi
 }
 
@@ -108,10 +111,15 @@ install_sanchosctl() {
 }
 
 install_ui_bits() {
+  install -d /usr/local/lib/sanchos-os
   install -Dm755 "$ROOT_DIR/firstboot/firstboot.py" /usr/local/lib/sanchos-os/firstboot.py
   install -Dm755 "$ROOT_DIR/ui/control-center/main.py" /usr/local/bin/sanchos-control-center
   install -Dm755 "$ROOT_DIR/bootstrap/uninstall.sh" /usr/local/share/sanchos-os/uninstall.sh
+  install -Dm755 "$ROOT_DIR/scripts/apply-plasma-wallpaper.py" /usr/local/lib/sanchos-os/apply-plasma-wallpaper.py
+  install -Dm755 "$ROOT_DIR/scripts/install-plasma-wallpaper-packages.py" /usr/local/lib/sanchos-os/install-plasma-wallpaper-packages.py
+  install -Dm755 "$ROOT_DIR/scripts/apply-default-wallpaper.sh" /usr/local/lib/sanchos-os/apply-default-wallpaper.sh
   install -Dm644 "$ROOT_DIR/configs/system/firstboot.desktop" /etc/xdg/autostart/sanchos-firstboot.desktop
+  install -Dm644 "$ROOT_DIR/configs/system/apply-default-wallpaper.desktop" /etc/xdg/autostart/sanchos-apply-default-wallpaper.desktop
   install -Dm644 "$ROOT_DIR/configs/system/control-center.desktop" /usr/share/applications/sanchos-control-center.desktop
 }
 

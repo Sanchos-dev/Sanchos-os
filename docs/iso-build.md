@@ -1,17 +1,16 @@
 # ISO build
 
-The repository now contains a first real ISO build path based on `live-build`.
+The repository contains a real ISO build path based on `live-build`.
 
-## Host requirements
+## Linux host requirements
 
-Build on a Debian 12 or Debian 13 machine with:
+On Debian 12 or Debian 13:
 
 ```bash
-sudo apt update
-sudo apt install -y live-build rsync debootstrap xorriso squashfs-tools
+sudo bash scripts/setup-build-deps.sh
 ```
 
-## Build
+## Build on Linux or WSL
 
 ```bash
 chmod +x scripts/build-iso.sh
@@ -31,6 +30,16 @@ The resulting image is written to:
 - installs the desktop and virtualization packages
 - runs `bootstrap/install.sh desktop-virt` inside the image build
 - emits a hybrid ISO for BIOS/UEFI testing
+
+## Windows host path
+
+If your main machine is on Windows, use WSL and see `docs/windows-build.md`.
+
+A PowerShell wrapper also exists:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\build-iso.ps1 -Distro Debian -Profile desktop-virt
+```
 
 ## Notes
 

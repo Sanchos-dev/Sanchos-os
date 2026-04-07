@@ -10,7 +10,7 @@ from tkinter import BOTH, END, LEFT, RIGHT, Button, Entry, Frame, Label, StringV
 from tkinter import ttk
 
 STATE_DIR = Path('/etc/sanchos-os/state')
-WALLPAPER_INDEX = Path('/usr/share/backgrounds/sanchos-os/index.json')
+WALLPAPER_DIR = Path('/usr/share/backgrounds/sanchos-os')
 
 
 def query(command: list[str], fallback: str = 'Unavailable') -> str:
@@ -41,7 +41,7 @@ class ControlCenter:
     def __init__(self) -> None:
         self.root = Tk()
         self.root.title('Sanchos Control Center')
-        self.root.geometry('1024x680')
+        self.root.geometry('1120x760')
         self.status = StringVar(value='Ready')
         self.vm_list = None
         self.module_list = None
@@ -90,18 +90,18 @@ class ControlCenter:
         right.pack(side=RIGHT, fill=BOTH, expand=True)
 
         Label(left, text='Host summary', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(0, 8))
-        self.host_summary = Label(left, justify='left', anchor='w', wraplength=400)
+        self.host_summary = Label(left, justify='left', anchor='w', wraplength=420)
         self.host_summary.pack(anchor='w')
 
         Label(left, text='Doctor', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(20, 8))
-        self.doctor_summary = Label(left, justify='left', anchor='w', wraplength=400)
+        self.doctor_summary = Label(left, justify='left', anchor='w', wraplength=420)
         self.doctor_summary.pack(anchor='w')
 
         Label(right, text='Quick actions', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(0, 8))
-        Button(right, text='Open virt-manager', width=26, command=lambda: self.launch(['virt-manager'])).pack(anchor='w', pady=4)
-        Button(right, text='Open NekoBox', width=26, command=lambda: self.launch(['nekobox'])).pack(anchor='w', pady=4)
-        Button(right, text='Open VM networks', width=26, command=lambda: self.show_text_window('VM networks', query(['sanchosctl', 'vm', 'networks']))).pack(anchor='w', pady=4)
-        Button(right, text='Run doctor in terminal', width=26, command=lambda: self.launch(['x-terminal-emulator', '-e', 'sanchosctl', 'system', 'doctor'])).pack(anchor='w', pady=4)
+        Button(right, text='Open virt-manager', width=28, command=lambda: self.launch(['virt-manager'])).pack(anchor='w', pady=4)
+        Button(right, text='Open NekoBox', width=28, command=lambda: self.launch(['nekobox'])).pack(anchor='w', pady=4)
+        Button(right, text='Open VM networks', width=28, command=lambda: self.show_text_window('VM networks', query(['sanchosctl', 'vm', 'networks']))).pack(anchor='w', pady=4)
+        Button(right, text='Run doctor in terminal', width=28, command=lambda: self.launch(['x-terminal-emulator', '-e', 'sanchosctl', 'system', 'doctor'])).pack(anchor='w', pady=4)
 
     def _build_vms(self) -> None:
         toolbar = Frame(self.tab_vms)
@@ -119,12 +119,12 @@ class ControlCenter:
         self.vm_name = Entry(create_row, width=18)
         self.vm_name.pack(side=LEFT, padx=(6, 10))
         Label(create_row, text='ISO').pack(side=LEFT)
-        self.vm_iso = Entry(create_row, width=38)
+        self.vm_iso = Entry(create_row, width=42)
         self.vm_iso.pack(side=LEFT, padx=(6, 10))
         Button(create_row, text='Create VM', command=self.create_vm).pack(side=LEFT)
 
         self.vm_list = ttk.Treeview(self.tab_vms, columns=('id', 'name', 'state'), show='headings', height=18)
-        for col, width in [('id', 80), ('name', 260), ('state', 220)]:
+        for col, width in [('id', 90), ('name', 280), ('state', 220)]:
             self.vm_list.heading(col, text=col.capitalize())
             self.vm_list.column(col, width=width)
         self.vm_list.pack(fill=BOTH, expand=True)
@@ -139,7 +139,7 @@ class ControlCenter:
         self.network_list.heading('item', text='Item')
         self.network_list.heading('value', text='Value')
         self.network_list.column('item', width=220)
-        self.network_list.column('value', width=720)
+        self.network_list.column('value', width=760)
         self.network_list.pack(fill=BOTH, expand=True)
 
     def _build_services(self) -> None:
@@ -157,22 +157,35 @@ class ControlCenter:
 
     def _build_appearance(self) -> None:
         Label(self.tab_appearance, text='Wallpapers', font=('Sans', 14, 'bold')).pack(anchor='w', pady=(0, 8))
-        Label(self.tab_appearance, text='Wallpapers are installed into /usr/share/backgrounds/sanchos-os and indexed for first boot and the control center.', wraplength=760, justify='left').pack(anchor='w', pady=(0, 4))
+        Label(
+            self.tab_appearance,
+            text='Wallpapers are installed into /usr/share/backgrounds/sanchos-os, mirrored into Plasma wallpaper packages, and can be applied directly to the current session.',
+            wraplength=860,
+            justify='left',
+        ).pack(anchor='w', pady=(0, 4))
         Label(self.tab_appearance, textvariable=self.wallpaper_default, font=('Sans', 10, 'bold')).pack(anchor='w', pady=(0, 8))
-        self.wallpaper_list = ttk.Treeview(self.tab_appearance, columns=('path',), show='headings', height=14)
+        self.wallpaper_list = ttk.Treeview(self.tab_appearance, columns=('path',), show='headings', height=15)
         self.wallpaper_list.heading('path', text='Installed wallpaper')
-        self.wallpaper_list.column('path', width=760)
+        self.wallpaper_list.column('path', width=820)
         self.wallpaper_list.pack(fill=BOTH, expand=False)
         toolbar = Frame(self.tab_appearance)
         toolbar.pack(fill=BOTH, pady=8)
         Button(toolbar, text='Rescan wallpapers', command=self.rescan_wallpapers).pack(side=LEFT)
+        Button(toolbar, text='Apply selected now', command=self.apply_selected_wallpaper).pack(side=LEFT, padx=(8, 0))
         Button(toolbar, text='Set selected as default', command=self.set_selected_wallpaper_default).pack(side=LEFT, padx=(8, 0))
-        Button(toolbar, text='Open wallpaper directory', command=lambda: self.launch(['xdg-open', '/usr/share/backgrounds/sanchos-os'])).pack(side=LEFT, padx=(8, 0))
-        Button(self.tab_appearance, text='Open first-boot state', command=lambda: self.show_text_window('First-boot state', read_text(Path.home() / '.config/sanchos-os/firstboot.json', fallback='No first-boot state found.'))).pack(anchor='w', pady=4)
+        Button(toolbar, text='Open wallpaper directory', command=lambda: self.launch(['xdg-open', str(WALLPAPER_DIR)])).pack(side=LEFT, padx=(8, 0))
+        Button(toolbar, text='Open first-boot state', command=lambda: self.show_text_window('First-boot state', read_text(Path.home() / '.config/sanchos-os/firstboot.json', fallback='No first-boot state found.'))).pack(side=LEFT, padx=(8, 0))
 
     def launch(self, command: list[str]) -> None:
         ok = run_detached(command)
         self.status.set('Launched' if ok else 'Launch failed')
+
+    def privileged_query(self, command: list[str], fallback: str = 'Unavailable') -> str:
+        if os.geteuid() == 0:
+            return query(command, fallback=fallback)
+        if shutil.which('pkexec'):
+            return query(['pkexec', *command], fallback=fallback)
+        return 'pkexec is not available for privileged actions.'
 
     def refresh_all(self) -> None:
         self.refresh_overview()
@@ -240,12 +253,11 @@ class ControlCenter:
                 default = line.removeprefix('Default: ').strip()
                 break
         self.wallpaper_default.set(f'Default: {default}')
-        base = Path('/usr/share/backgrounds/sanchos-os')
-        if not base.exists():
+        if not WALLPAPER_DIR.exists():
             return
-        for path in sorted(base.rglob('*')):
+        for path in sorted(WALLPAPER_DIR.rglob('*')):
             if path.is_file() and path.suffix.lower() in {'.png', '.jpg', '.jpeg', '.webp', '.svg'} and path.name != 'index.json':
-                self.wallpaper_list.insert('', END, values=(str(path.relative_to(base)),))
+                self.wallpaper_list.insert('', END, values=(str(path.relative_to(WALLPAPER_DIR)),))
 
     def selected_wallpaper(self) -> str | None:
         selected = self.wallpaper_list.selection()
@@ -256,22 +268,30 @@ class ControlCenter:
         return values[0] if values else None
 
     def rescan_wallpapers(self) -> None:
-        if os.geteuid() != 0:
-            self.status.set('Open control center as root to rebuild the index')
-            return
-        output = query(['sanchosctl', 'wallpaper', 'rescan'], fallback='Rescan failed')
+        output = self.privileged_query(['sanchosctl', 'wallpaper', 'rescan'], fallback='Rescan failed')
         self.status.set(output.splitlines()[0] if output else 'Rescanned wallpapers')
+        self.refresh_appearance()
+
+    def apply_selected_wallpaper(self) -> None:
+        path = self.selected_wallpaper()
+        if not path:
+            return
+        output = query(['sanchosctl', 'wallpaper', 'apply', path], fallback='Apply failed')
+        self.status.set(output.splitlines()[0] if output else f'Applied {path}')
         self.refresh_appearance()
 
     def set_selected_wallpaper_default(self) -> None:
         path = self.selected_wallpaper()
         if not path:
             return
-        if os.geteuid() != 0:
-            self.status.set('Open control center as root to change the default wallpaper')
-            return
-        output = query(['sanchosctl', 'wallpaper', 'set-default', path], fallback='Set default failed')
-        self.status.set(output.splitlines()[0] if output else f'Set default wallpaper: {path}')
+        default_output = self.privileged_query(['sanchosctl', 'wallpaper', 'set-default', path], fallback='Set default failed')
+        apply_output = query(['sanchosctl', 'wallpaper', 'apply', path], fallback='Apply failed')
+        default_line = default_output.splitlines()[0] if default_output else ''
+        apply_line = apply_output.splitlines()[0] if apply_output else ''
+        if default_line and apply_line:
+            self.status.set(f'{default_line} | {apply_line}')
+        else:
+            self.status.set(default_line or apply_line or f'Updated wallpaper: {path}')
         self.refresh_appearance()
 
     def selected_vm_name(self) -> str | None:
@@ -307,7 +327,7 @@ class ControlCenter:
         name = self.selected_vm_name()
         if not name:
             return
-        output = query(['sanchosctl', 'vm', 'delete', name, '--yes'], fallback='Delete failed')
+        output = self.privileged_query(['sanchosctl', 'vm', 'delete', name, '--yes'], fallback='Delete failed')
         self.status.set(output.splitlines()[0] if output else f'Deleted {name}')
         self.refresh_vms()
 
@@ -317,7 +337,7 @@ class ControlCenter:
         if not name or not iso:
             self.status.set('Fill VM name and ISO path first')
             return
-        output = query(['sanchosctl', 'vm', 'create', name, '--iso', iso], fallback='Create failed')
+        output = self.privileged_query(['sanchosctl', 'vm', 'create', name, '--iso', iso], fallback='Create failed')
         self.status.set(output.splitlines()[0] if output else f'Create launched for {name}')
         self.refresh_vms()
 
@@ -325,10 +345,7 @@ class ControlCenter:
         name = self.selected_module_name()
         if not name:
             return
-        if os.geteuid() != 0:
-            self.status.set('Open control center as root to enable modules')
-            return
-        output = query(['sanchosctl', 'module', 'enable', name], fallback='Enable failed')
+        output = self.privileged_query(['sanchosctl', 'module', 'enable', name], fallback='Enable failed')
         self.status.set(output.splitlines()[0] if output else f'Enabled {name}')
         self.refresh_services()
 

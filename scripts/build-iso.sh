@@ -29,6 +29,7 @@ main() {
 
   log "Configuring live-build for $PROFILE"
   lb config \
+    --ignore-system-defaults \
     --distribution bookworm \
     --debian-installer live \
     --archive-areas "main contrib non-free non-free-firmware" \
@@ -57,6 +58,11 @@ sddm
 dolphin
 konsole
 kate
+firefox-esr
+plasma-nm
+pipewire
+pipewire-pulse
+wireplumber
 qemu-kvm
 qemu-system-x86
 libvirt-daemon-system

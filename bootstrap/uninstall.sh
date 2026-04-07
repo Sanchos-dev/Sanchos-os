@@ -41,10 +41,17 @@ remove_external_artifacts() {
   fi
 }
 
+remove_plasma_wallpaper_packages() {
+  if [[ -d /usr/share/wallpapers ]]; then
+    find /usr/share/wallpapers -maxdepth 1 -mindepth 1 -type d -name 'SanchosOs-*' -exec rm -rf {} + 2>/dev/null || true
+  fi
+}
+
 main() {
   require_root
   remove_profile_packages
   remove_external_artifacts
+  remove_plasma_wallpaper_packages
 
   log "Removing installed files"
   remove_path /etc/sanchos-os
@@ -54,6 +61,7 @@ main() {
   remove_path /usr/local/share/sanchos-os
   remove_path /usr/share/applications/sanchos-control-center.desktop
   remove_path /etc/xdg/autostart/sanchos-firstboot.desktop
+  remove_path /etc/xdg/autostart/sanchos-apply-default-wallpaper.desktop
   remove_path /usr/share/backgrounds/sanchos-os
   remove_path /usr/share/sddm/themes/sanchos-os
 

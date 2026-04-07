@@ -15,25 +15,24 @@ import yaml
 
 STATE_DIR = Path('/etc/sanchos-os/state')
 ENABLED_MODULES_FILE = STATE_DIR / 'enabled-modules'
+WALLPAPER_DIR = Path('/usr/share/backgrounds/sanchos-os')
+WALLPAPER_INDEX = WALLPAPER_DIR / 'index.json'
+PLASMA_WALLPAPER_ROOT = Path('/usr/share/wallpapers')
 DEFAULT_VM_STORAGE = Path('/var/lib/libvirt/images')
 LIBVIRT_DEFAULT_NETWORK = 'default'
-WALLPAPER_INDEX = Path('/usr/share/backgrounds/sanchos-os/index.json')
-
-
-WALLPAPER_DIR = WALLPAPER_INDEX.parent
 VALID_WALLPAPER_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.svg'}
 
 
-def scan_wallpapers(base: Path = WALLPAPER_DIR) -> dict:
+def scan_wallpapers() -> dict:
     collections: dict[str, list[str]] = {}
-    if not base.exists():
-        return {'default': 'unset', 'collections': {}}
-    for path in sorted(base.rglob('*')):
+    if not WALLPAPER_DIR.exists():
+        return {'default': 'unset', 'collections': {'default': [], 'purple': [], 'fox': []}}
+    for path in sorted(WALLPAPER_DIR.rglob('*')):
         if not path.is_file() or path.name == 'index.json':
             continue
         if path.suffix.lower() not in VALID_WALLPAPER_EXTS:
             continue
-        rel = path.relative_to(base).as_posix()
+        rel = path.relative_to(WALLPAPER_DIR).as_posix()
         parts = rel.split('/')
         collection = parts[0] if len(parts) > 1 else 'default'
         collections.setdefault(collection, []).append(rel)
@@ -42,7 +41,10 @@ def scan_wallpapers(base: Path = WALLPAPER_DIR) -> dict:
         ordered[name] = collections[name]
     default_path = 'unset'
     if ordered.get('default'):
-        default_path = 'default/sanchos-default.svg' if 'default/sanchos-default.svg' in ordered['default'] else ordered['default'][0]
+        if 'default/sanchos-default.svg' in ordered['default']:
+            default_path = 'default/sanchos-default.svg'
+        else:
+            default_path = ordered['default'][0]
     else:
         for items in ordered.values():
             if items:
@@ -63,6 +65,19 @@ def load_wallpaper_index() -> dict:
 def save_wallpaper_index(data: dict) -> None:
     WALLPAPER_DIR.mkdir(parents=True, exist_ok=True)
     WALLPAPER_INDEX.write_text(json.dumps(data, indent=2) + '\n')
+
+
+def resolve_wallpaper_path(value: str) -> tuple[str, Path]:
+    path = Path(value).expanduser()
+    if path.is_absolute():
+        resolved = path.resolve()
+        if WALLPAPER_DIR in resolved.parents or resolved == WALLPAPER_DIR:
+            rel = resolved.relative_to(WALLPAPER_DIR).as_posix()
+        else:
+            rel = resolved.name
+        return rel, resolved
+    resolved = (WALLPAPER_DIR / value).resolve()
+    return value, resolved
 
 
 def find_root() -> Path:
@@ -145,6 +160,55 @@ def ensure_vm_exists(name: str) -> bool:
     return True
 
 
+def find_helper(name: str) -> Path | None:
+    candidates = [
+        ROOT / 'scripts' / name,
+        Path('/usr/local/lib/sanchos-os') / name,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def sync_plasma_wallpaper_packages() -> int:
+    helper = find_helper('install-plasma-wallpaper-packages.py')
+    if helper is None:
+        print('Wallpaper package sync helper not found.')
+        return 1
+    rc, stdout, stderr = run(['python3', str(helper), str(WALLPAPER_DIR), str(PLASMA_WALLPAPER_ROOT)])
+    if stdout:
+        print(stdout)
+    if rc != 0 and stderr:
+        print(stderr)
+    return rc
+
+
+def apply_wallpaper(value: str, quiet: bool = False) -> int:
+    _, path = resolve_wallpaper_path(value)
+    if not path.exists():
+        if not quiet:
+            print(f'Wallpaper not found: {value}')
+        return 1
+    helper = find_helper('apply-plasma-wallpaper.py')
+    if helper is None:
+        if not quiet:
+            print('Wallpaper apply helper not found.')
+        return 1
+    command = ['python3', str(helper), str(path)]
+    if quiet:
+        command.append('--quiet')
+    rc, stdout, stderr = run(command)
+    if not quiet:
+        if stdout:
+            print(stdout)
+        if rc != 0 and stderr:
+            print(stderr)
+    return rc
+
+
+# system commands
+
 def cmd_system_info(_: argparse.Namespace) -> int:
     print_header('System information')
     print(f'Hostname: {platform.node()}')
@@ -177,7 +241,8 @@ def cmd_system_doctor(_: argparse.Namespace) -> int:
         ('podman', shutil.which('podman') is not None),
         ('nekobox', shutil.which('nekobox') is not None or Path('/opt/nekobox/nekobox.AppImage').exists()),
         ('control center', Path('/usr/local/bin/sanchos-control-center').exists()),
-        ('wallpaper assets', WALLPAPER_DIR.exists()),
+        ('wallpaper index', WALLPAPER_INDEX.exists()),
+        ('wallpaper apply helper', find_helper('apply-plasma-wallpaper.py') is not None),
     ]
     rc, stdout, _ = run(['systemctl', 'is-active', 'libvirtd'])
     checks.append(('libvirtd active', rc == 0 and stdout == 'active'))
@@ -205,6 +270,8 @@ def cmd_system_reset(args: argparse.Namespace) -> int:
         return 1
     return stream(['bash', str(uninstall)])
 
+
+# profile/module commands
 
 def cmd_profile_list(_: argparse.Namespace) -> int:
     print_header('Profiles')
@@ -299,6 +366,8 @@ def cmd_module_enable(args: argparse.Namespace) -> int:
     print(f'Enabled module: {args.name}')
     return 0
 
+
+# VM commands
 
 def require_virsh() -> bool:
     if shutil.which('virsh') is None:
@@ -473,6 +542,8 @@ def cmd_vm_networks(_: argparse.Namespace) -> int:
     return rc
 
 
+# wallpaper commands
+
 def cmd_wallpaper_list(_: argparse.Namespace) -> int:
     print_header('Wallpapers')
     data = load_wallpaper_index()
@@ -485,10 +556,12 @@ def cmd_wallpaper_list(_: argparse.Namespace) -> int:
 
 
 def cmd_wallpaper_rescan(_: argparse.Namespace) -> int:
+    require_root_for_mutation()
     data = scan_wallpapers()
     save_wallpaper_index(data)
     total = sum(len(items) for items in data.get('collections', {}).values())
     print(f'Rebuilt wallpaper index with {total} wallpaper(s).')
+    sync_plasma_wallpaper_packages()
     return 0
 
 
@@ -497,12 +570,32 @@ def cmd_wallpaper_set_default(args: argparse.Namespace) -> int:
     data = load_wallpaper_index()
     all_items = {item for items in data.get('collections', {}).values() for item in items}
     if args.path not in all_items:
-        print(f'Wallpaper not found in index: {args.path}')
-        return 1
+        _, resolved = resolve_wallpaper_path(args.path)
+        if resolved.exists() and WALLPAPER_DIR in resolved.parents:
+            args.path = resolved.relative_to(WALLPAPER_DIR).as_posix()
+        else:
+            print(f'Wallpaper not found in index: {args.path}')
+            return 1
     data['default'] = args.path
     save_wallpaper_index(data)
     print(f'Set default wallpaper: {args.path}')
+    if args.apply:
+        return apply_wallpaper(args.path, quiet=False)
     return 0
+
+
+def cmd_wallpaper_apply(args: argparse.Namespace) -> int:
+    return apply_wallpaper(args.path, quiet=args.quiet)
+
+
+def cmd_wallpaper_apply_default(args: argparse.Namespace) -> int:
+    data = load_wallpaper_index()
+    target = data.get('default')
+    if not target or target == 'unset':
+        if not args.quiet:
+            print('No default wallpaper is configured.')
+        return 1
+    return apply_wallpaper(target, quiet=args.quiet)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -589,10 +682,19 @@ def build_parser() -> argparse.ArgumentParser:
     wallpaper = subparsers.add_parser('wallpaper')
     wallpaper_sub = wallpaper.add_subparsers(dest='action', required=True)
     wallpaper_sub.add_parser('list').set_defaults(func=cmd_wallpaper_list)
-    wallpaper_sub.add_parser('rescan').set_defaults(func=cmd_wallpaper_rescan)
+    wallpaper_rescan = wallpaper_sub.add_parser('rescan')
+    wallpaper_rescan.set_defaults(func=cmd_wallpaper_rescan)
     wallpaper_set_default = wallpaper_sub.add_parser('set-default')
     wallpaper_set_default.add_argument('path')
+    wallpaper_set_default.add_argument('--apply', action='store_true')
     wallpaper_set_default.set_defaults(func=cmd_wallpaper_set_default)
+    wallpaper_apply = wallpaper_sub.add_parser('apply')
+    wallpaper_apply.add_argument('path')
+    wallpaper_apply.add_argument('--quiet', action='store_true')
+    wallpaper_apply.set_defaults(func=cmd_wallpaper_apply)
+    wallpaper_apply_default = wallpaper_sub.add_parser('apply-default')
+    wallpaper_apply_default.add_argument('--quiet', action='store_true')
+    wallpaper_apply_default.set_defaults(func=cmd_wallpaper_apply_default)
     return parser
 
 

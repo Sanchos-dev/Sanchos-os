@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=sanchos-os wallpaper apply
+Comment=Apply the default sanchos-os wallpaper after Plasma starts
+Exec=/usr/local/lib/sanchos-os/apply-default-wallpaper.sh
+OnlyShowIn=KDE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

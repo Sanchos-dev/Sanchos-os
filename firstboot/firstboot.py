@@ -41,7 +41,7 @@ def main() -> None:
 
     root = Tk()
     root.title('sanchos-os setup')
-    root.geometry('680x460')
+    root.geometry('720x500')
     root.resizable(False, False)
 
     Label(root, text='Welcome to sanchos-os', font=('Sans', 18, 'bold')).pack(pady=(18, 6))
@@ -70,19 +70,26 @@ def main() -> None:
     launch_control_center = IntVar(value=1)
     Checkbutton(root, text='Open control center after setup', variable=launch_control_center).pack(anchor='w', padx=44)
 
-    Label(root, text='Wallpaper collections are indexed from /usr/share/backgrounds/sanchos-os. If the list looks wrong, rebuild the index with: sudo sanchosctl wallpaper rescan', wraplength=560, justify='left').pack(pady=(18, 16))
+    Label(
+        root,
+        text='The selected wallpaper is written as the system default and then applied to the current Plasma session.',
+        wraplength=580,
+        justify='left',
+    ).pack(pady=(18, 16))
 
     def finish() -> None:
+        selected_wallpaper = wallpaper_var.get()
         data = {
             'theme': theme_var.get(),
             'profile': profile_var.get(),
-            'wallpaper': wallpaper_var.get(),
+            'wallpaper': selected_wallpaper,
             'virtualization': bool(enable_virt.get()),
             'nekobox_visible': bool(enable_nekobox.get()),
             'launch_control_center': bool(launch_control_center.get()),
         }
         save_state(data)
-        run(['pkexec', 'sanchosctl', 'wallpaper', 'set-default', wallpaper_var.get()])
+        run(['pkexec', 'sanchosctl', 'wallpaper', 'set-default', selected_wallpaper])
+        run(['sanchosctl', 'wallpaper', 'apply', selected_wallpaper])
         if theme_var.get() == 'dark':
             run(['lookandfeeltool', '-a', 'org.kde.breezedark.desktop'])
         else:
