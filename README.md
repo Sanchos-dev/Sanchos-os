@@ -104,4 +104,10 @@ See `docs/iso-build.md`, `docs/windows-build.md` and `docs/visual-customization.
 ## Notes
 
 - `nekobox` and `sanchos-control-center` must be launched inside a graphical KDE session, not from a plain SSH shell.
- 
+- v9 defaults to `purple/purple0.png` when that wallpaper exists.
+- the tiling path in v9 uses **Plasma + i3**, not a minimal standalone window manager session.
+
+
+## v10 visual direction
+
+The default visual direction now prioritizes a polished KWin session with a floating top panel, warm purple colors, Kvantum-based rounded styling, monochrome icons and optional tiling. The scaffold no longer includes generated placeholder wallpapers; it expects the real wallpaper assets from your repository.

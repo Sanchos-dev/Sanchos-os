@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=sanchos-os First Boot
-Exec=/usr/local/lib/sanchos-os/firstboot.py
+Exec=/usr/local/bin/sanchos-firstboot
 OnlyShowIn=KDE;
 X-GNOME-Autostart-enabled=true
 NoDisplay=false

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=sanchos-os launcher hotkeys
+Comment=Start xbindkeys for the Meta+Space launcher
+Exec=/bin/sh -lc 'pgrep -x xbindkeys >/dev/null || xbindkeys -f "$HOME/.config/xbindkeysrc"'
+OnlyShowIn=KDE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

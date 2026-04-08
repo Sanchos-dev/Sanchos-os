@@ -1,149 +1,56 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-
-import json
-import subprocess
+import json, os, subprocess
 from pathlib import Path
-from tkinter import BOTH, LEFT, W, Button, Checkbutton, Frame, IntVar, Label, OptionMenu, StringVar, Tk
-
-STATE_DIR = Path.home() / '.config' / 'sanchos-os'
-STATE_FILE = STATE_DIR / 'firstboot.json'
+import customtkinter as ctk
+STATE_DIR = Path.home()/'.config'/'sanchos-os'
+STATE_FILE = STATE_DIR/'firstboot.json'
 WALLPAPER_INDEX = Path('/usr/share/backgrounds/sanchos-os/index.json')
-PROFILES = ['desktop', 'desktop-virt', 'dev', 'server-lite']
-PALETTE = {
-    'bg': '#120f18',
-    'panel': '#1f1828',
-    'panel2': '#2a2036',
-    'fg': '#f6f2ff',
-    'muted': '#cabfdf',
-    'accent': '#9f6fff',
-    'accent_soft': '#6d4ac6',
-}
-
-
-def run(command: list[str]) -> None:
+PALETTE = {'bg':'#120e18','panel':'#1a1423','panel2':'#241c31','fg':'#f5f1ff','muted':'#cbbfe5','accent':'#9d72ff','accent2':'#7a56d6'}
+ctk.set_appearance_mode('dark'); ctk.set_default_color_theme('blue')
+def run(cmd):
+    try: subprocess.run(cmd, check=False)
+    except Exception: pass
+def load_wallpapers():
     try:
-        subprocess.run(command, check=False)
-    except Exception:
-        pass
-
-
-def save_state(data: dict) -> None:
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(data, indent=2) + '\n')
-
-
-def load_wallpapers() -> list[str]:
-    try:
-        data = json.loads(WALLPAPER_INDEX.read_text())
-        items: list[str] = []
-        for values in data.get('collections', {}).values():
-            items.extend(values)
-        return items or [data.get('default', 'purple/purple0.png')]
-    except Exception:
-        return ['purple/purple0.png']
-
-
-def preferred_wallpaper(items: list[str]) -> str:
-    for candidate in ['purple/purple0.png', 'default/wp0.png', 'default/sanchos-default.svg']:
-        if candidate in items:
-            return candidate
+        data=json.loads(WALLPAPER_INDEX.read_text()); items=[]
+        for values in data.get('collections', {}).values(): items.extend(values)
+        return items or [data.get('default','purple/purple0.png')]
+    except Exception: return ['purple/purple0.png']
+def preferred(items):
+    for candidate in ['purple/purple0.png','purple/purple1.png','default/wp0.png']:
+        if candidate in items: return candidate
     return items[0]
-
-
-def style_option_menu(widget: OptionMenu) -> None:
-    widget.config(bg=PALETTE['panel2'], fg=PALETTE['fg'], activebackground=PALETTE['accent_soft'], activeforeground=PALETTE['fg'], highlightthickness=0)
-    widget['menu'].config(bg=PALETTE['panel2'], fg=PALETTE['fg'], activebackground=PALETTE['accent_soft'])
-
-
-def main() -> None:
-    if STATE_FILE.exists():
-        return
-
-    root = Tk()
-    root.title('sanchos-os first boot')
-    root.geometry('840x620')
-    root.resizable(False, False)
-    root.configure(bg=PALETTE['bg'])
-
-    shell = Frame(root, bg=PALETTE['bg'])
-    shell.pack(fill=BOTH, expand=True, padx=24, pady=24)
-
-    card = Frame(shell, bg=PALETTE['panel'], bd=0, highlightthickness=1, highlightbackground='#3b2b4e')
-    card.pack(fill=BOTH, expand=True)
-
-    Label(card, text='Welcome to sanchos-os', font=('Sans', 22, 'bold'), bg=PALETTE['panel'], fg=PALETTE['fg']).pack(anchor=W, padx=28, pady=(24, 6))
-    Label(card, text='Warm purple desktop, tiling-first window management, native virtualization and your service stack.', font=('Sans', 11), bg=PALETTE['panel'], fg=PALETTE['muted'], wraplength=700, justify='left').pack(anchor=W, padx=28, pady=(0, 18))
-
-    form = Frame(card, bg=PALETTE['panel'])
-    form.pack(fill=BOTH, expand=True, padx=28, pady=12)
-
-    theme_var = StringVar(value='sanchos-purple')
-    profile_var = StringVar(value='desktop-virt')
-    wallpaper_options = load_wallpapers()
-    wallpaper_var = StringVar(value=preferred_wallpaper(wallpaper_options))
-
-    for label_text, var, options in [
-        ('Visual preset', theme_var, ['sanchos-purple', 'sanchos-purple-soft', 'dark']),
-        ('Primary profile', profile_var, PROFILES),
-        ('Default wallpaper', wallpaper_var, wallpaper_options),
-    ]:
-        Label(form, text=label_text, bg=PALETTE['panel'], fg=PALETTE['fg'], font=('Sans', 10, 'bold')).pack(anchor=W, pady=(8, 6))
-        menu = OptionMenu(form, var, *options)
-        style_option_menu(menu)
-        menu.pack(anchor=W)
-
-    enable_virt = IntVar(value=1)
-    enable_nekobox = IntVar(value=1)
-    enable_tiling = IntVar(value=1)
-    apply_panel = IntVar(value=1)
-    launch_control_center = IntVar(value=1)
-
-    checks = [
-        ('Keep virtualization tools enabled', enable_virt),
-        ('Keep NekoBox in the default app set', enable_nekobox),
-        ('Use Plasma + i3 tiling session on next login', enable_tiling),
-        ('Apply the floating top panel and widget preset', apply_panel),
-        ('Open control center after setup', launch_control_center),
-    ]
-    for text, variable in checks:
-        Checkbutton(form, text=text, variable=variable, bg=PALETTE['panel'], fg=PALETTE['fg'], activebackground=PALETTE['panel'], activeforeground=PALETTE['fg'], selectcolor=PALETTE['panel2']).pack(anchor=W, pady=3)
-
-    Label(card, text='The selected wallpaper becomes the default system wallpaper and is applied to the current Plasma session.', bg=PALETTE['panel'], fg=PALETTE['muted'], wraplength=700, justify='left').pack(anchor=W, padx=28, pady=(12, 18))
-
-    actions = Frame(card, bg=PALETTE['panel'])
-    actions.pack(fill=BOTH, padx=28, pady=(0, 24))
-
-    def finish() -> None:
-        selected_wallpaper = wallpaper_var.get()
-        data = {
-            'theme': theme_var.get(),
-            'profile': profile_var.get(),
-            'wallpaper': selected_wallpaper,
-            'virtualization': bool(enable_virt.get()),
-            'nekobox_visible': bool(enable_nekobox.get()),
-            'tiling_enabled': bool(enable_tiling.get()),
-            'panel_enabled': bool(apply_panel.get()),
-            'launch_control_center': bool(launch_control_center.get()),
-        }
-        save_state(data)
-        run(['pkexec', 'sanchosctl', 'wallpaper', 'set-default', selected_wallpaper])
-        run(['sanchosctl', 'wallpaper', 'apply', selected_wallpaper])
-        visual_command = ['pkexec', 'sanchosctl', 'visual', 'apply']
-        if apply_panel.get():
-            visual_command.append('--apply-now')
-        run(visual_command)
-        if enable_tiling.get():
-            run(['pkexec', 'sanchosctl', 'visual', 'tiling', 'enable'])
-        else:
-            run(['pkexec', 'sanchosctl', 'visual', 'tiling', 'disable'])
-        if launch_control_center.get():
-            run(['sanchos-control-center'])
-        root.destroy()
-
-    Button(actions, text='Finish setup', command=finish, bg=PALETTE['accent'], fg=PALETTE['fg'], activebackground=PALETTE['accent_soft'], activeforeground=PALETTE['fg'], padx=18, pady=8).pack(side=LEFT)
-    root.mainloop()
-
-
-if __name__ == '__main__':
-    main()
+def save_state(data): STATE_DIR.mkdir(parents=True, exist_ok=True); STATE_FILE.write_text(json.dumps(data, indent=2)+'\n')
+class FirstBoot(ctk.CTk):
+    def __init__(self):
+        super().__init__(); self.title('sanchos-os first boot'); self.geometry('980x720'); self.minsize(900,680); self.configure(fg_color=PALETTE['bg'])
+        self.wallpapers=load_wallpapers(); self.wallpaper_var=ctk.StringVar(value=preferred(self.wallpapers)); self.launch_cc=ctk.BooleanVar(value=True); self.apply_panel=ctk.BooleanVar(value=True); self.build()
+    def build(self):
+        shell=ctk.CTkFrame(self,fg_color='transparent'); shell.pack(fill='both',expand=True,padx=28,pady=28)
+        hero=ctk.CTkFrame(shell,corner_radius=28,fg_color=PALETTE['panel']); hero.pack(fill='both',expand=True)
+        ctk.CTkLabel(hero,text='Welcome to sanchos-os',font=ctk.CTkFont(family='Inter',size=34,weight='bold')).pack(anchor='w',padx=28,pady=(26,6))
+        ctk.CTkLabel(hero,text='Set the wallpaper, warm shell and launcher defaults before you settle in.',text_color=PALETTE['muted']).pack(anchor='w',padx=28,pady=(0,18))
+        grid=ctk.CTkFrame(hero,fg_color='transparent'); grid.pack(fill='both',expand=True,padx=26,pady=(0,22)); grid.grid_columnconfigure((0,1), weight=1)
+        left=ctk.CTkFrame(grid,corner_radius=24,fg_color=PALETTE['panel2']); left.grid(row=0,column=0,sticky='nsew',padx=(0,10),pady=(0,12))
+        ctk.CTkLabel(left,text='Wallpaper',font=ctk.CTkFont(family='Inter',size=22,weight='bold')).pack(anchor='w',padx=20,pady=(18,10))
+        ctk.CTkOptionMenu(left,variable=self.wallpaper_var,values=self.wallpapers,corner_radius=14,width=360,fg_color='#302443',button_color=PALETTE['accent2'],button_hover_color=PALETTE['accent']).pack(anchor='w',padx=20)
+        ctk.CTkLabel(left,text='purple0 is the intended default for the warm visual preset.',text_color=PALETTE['muted']).pack(anchor='w',padx=20,pady=(12,0))
+        right=ctk.CTkFrame(grid,corner_radius=24,fg_color=PALETTE['panel2']); right.grid(row=0,column=1,sticky='nsew',padx=(10,0),pady=(0,12))
+        ctk.CTkLabel(right,text='Session polish',font=ctk.CTkFont(family='Inter',size=22,weight='bold')).pack(anchor='w',padx=20,pady=(18,10))
+        ctk.CTkCheckBox(right,text='Apply rounded top panel now',variable=self.apply_panel,fg_color=PALETTE['accent'],hover_color=PALETTE['accent2']).pack(anchor='w',padx=20,pady=8)
+        ctk.CTkCheckBox(right,text='Open control center after finishing',variable=self.launch_cc,fg_color=PALETTE['accent'],hover_color=PALETTE['accent2']).pack(anchor='w',padx=20,pady=8)
+        ctk.CTkLabel(right,text='Meta+Space launches the centered search after the desktop finishes starting.',text_color=PALETTE['muted'],wraplength=360,justify='left').pack(anchor='w',padx=20,pady=(10,0))
+        notes=ctk.CTkFrame(hero,corner_radius=24,fg_color=PALETTE['panel2']); notes.pack(fill='x',padx=26,pady=(0,18))
+        ctk.CTkLabel(notes,text='What happens next',font=ctk.CTkFont(family='Inter',size=22,weight='bold')).pack(anchor='w',padx=20,pady=(18,10))
+        body=ctk.CTkTextbox(notes,height=140,corner_radius=18,fg_color='#1a1423'); body.pack(fill='x',padx=20,pady=(0,18)); body.insert('1.0','- The selected wallpaper becomes the system default.\n- The warm rounded Plasma preset is applied.\n- The floating top panel is rebuilt if requested.\n- CustomTkinter tools take over instead of plain Tk windows.'); body.configure(state='disabled')
+        ctk.CTkButton(hero,text='Finish setup',command=self.finish,corner_radius=18,height=46,fg_color=PALETTE['accent'],hover_color=PALETTE['accent2']).pack(anchor='w',padx=28,pady=(0,24))
+    def finish(self):
+        selected=self.wallpaper_var.get(); save_state({'wallpaper':selected,'launch_control_center':bool(self.launch_cc.get()),'panel_enabled':bool(self.apply_panel.get())}); run(['pkexec','sanchosctl','wallpaper','set-default',selected]); run(['sanchosctl','wallpaper','apply',selected]); cmd=['sanchosctl','visual','apply'];
+        if self.apply_panel.get(): cmd.append('--apply-now'); run(cmd)
+        if self.launch_cc.get(): run(['sanchos-control-center'])
+        self.destroy()
+def main():
+    if STATE_FILE.exists() or not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')): return
+    app=FirstBoot(); app.mainloop()
+if __name__=='__main__': main()

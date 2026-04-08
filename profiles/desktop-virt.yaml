@@ -1,5 +1,5 @@
 name: desktop-virt
-description: Flagship workstation profile with Plasma, KVM/libvirt, container tooling, a polished warm-purple shell, optional tiling, rounded styling and NekoBox.
+description: Flagship workstation profile with Plasma, KVM/libvirt, rounded warm-purple styling, launcher search, CustomTkinter utilities and NekoBox.
 packages:
   - plasma-desktop
   - sddm
@@ -16,6 +16,7 @@ packages:
   - xdg-utils
   - xdg-desktop-portal-kde
   - python3-tk
+  - python3-venv
   - qemu-kvm
   - qemu-system
   - qemu-utils
@@ -34,10 +35,11 @@ packages:
   - kde-config-gtk-style
   - breeze-gtk-theme
   - plasma-widgets-addons
-  - i3-wm
-  - i3status
-  - i3lock
   - rofi
+  - xbindkeys
+  - papirus-icon-theme
+  - fonts-inter
+  - fonts-jetbrains-mono
 modules:
   - virtualization
   - containers

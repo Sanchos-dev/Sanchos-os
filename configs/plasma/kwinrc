@@ -9,21 +9,19 @@ Number=1
 Rows=1
 
 [Effect-blur]
-BlurStrength=12
-NoiseStrength=4
+BlurStrength=15
+NoiseStrength=3
 
 [Plugins]
 blurEnabled=true
 overviewEnabled=true
 slideEnabled=false
-
-[TabBox]
-LayoutName=thumbnails
-
-[Tiling]
-padding=8
+wobblywindowsEnabled=false
 
 [Windows]
 BorderlessMaximizedWindows=false
 ElectricBorderTiling=false
 Placement=Centered
+
+[Tiling]
+padding=10

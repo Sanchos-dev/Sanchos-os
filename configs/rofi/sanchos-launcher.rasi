@@ -1,0 +1,70 @@
+* {
+  bg: #18131fcc;
+  bg2: #241b2ecc;
+  fg: #f5f1ff;
+  muted: #c8bedf;
+  accent: #9d72ff;
+  border: #4f3c69;
+}
+window {
+  transparency: "real";
+  location: center;
+  anchor: center;
+  width: 38%;
+  border: 1px;
+  border-radius: 22px;
+  border-color: @border;
+  background-color: @bg;
+  padding: 22px;
+}
+mainbox {
+  spacing: 16px;
+  children: [ inputbar, listview ];
+}
+inputbar {
+  border: 0px;
+  border-radius: 16px;
+  padding: 14px 18px;
+  background-color: @bg2;
+  text-color: @fg;
+  children: [ prompt, entry ];
+}
+prompt {
+  text-color: @accent;
+  enabled: true;
+  background-color: inherit;
+  padding: 0px 12px 0px 0px;
+}
+entry {
+  placeholder: "Search apps, files and commands";
+  placeholder-color: @muted;
+  text-color: @fg;
+  background-color: inherit;
+}
+listview {
+  lines: 8;
+  columns: 1;
+  fixed-height: false;
+  background-color: transparent;
+  spacing: 8px;
+  scrollbar: false;
+}
+element {
+  border: 0px;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background-color: transparent;
+  text-color: @fg;
+}
+element selected.normal {
+  background-color: #8b5cf633;
+  text-color: @fg;
+}
+element-icon {
+  size: 28px;
+  margin: 0px 12px 0px 0px;
+}
+element-text {
+  text-color: inherit;
+  vertical-align: 0.5;
+}

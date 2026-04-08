@@ -1,20 +1,18 @@
 [General]
-comment=A warm rounded kvantum theme scaffold for sanchos-os
-
-[PanelButtonCommand]
-frame=true
+comment=Warm rounded kvantum theme for sanchos-os v11
 
 [Window]
-roundness=10
+roundness=18
+translucent_windows=true
 
 [Blur]
 blur=true
 
 [GeneralColors]
-window.color=#17131f
-base.color=#14101c
-alt.base.color=#1d1827
-text.color=#f4f0ff
-button.color=#2a2238
+window.color=#17111f
+base.color=#140f1a
+alt.base.color=#1d1628
+text.color=#f5f1ff
+button.color=#291f38
 highlight.color=#8b5cf6
 link.color=#c4b5fd

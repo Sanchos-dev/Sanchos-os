@@ -776,7 +776,7 @@ def build_parser() -> argparse.ArgumentParser:
     visual_apply = visual_sub.add_parser('apply')
     visual_apply.add_argument('--user')
     visual_apply.add_argument('--apply-now', action='store_true')
-    visual_apply.add_argument('--no-tiling', action='store_true')
+    visual_apply.add_argument('--no-tiling', action='store_true', help='keep the default polished KWin session instead of enabling i3 integration')
     visual_apply.set_defaults(func=cmd_visual_apply)
     visual_panel = visual_sub.add_parser('panel')
     visual_panel.add_argument('--quiet', action='store_true')

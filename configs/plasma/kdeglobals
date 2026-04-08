@@ -3,6 +3,10 @@ Name=sanchos-os
 ColorScheme=SanchosWarm
 XftAntialias=true
 XftHintStyle=hintslight
+font=Inter,11,-1,5,50,0,0,0,0,0
+smallestReadableFont=Inter,10,-1,5,50,0,0,0,0,0
+toolBarFont=Inter,10,-1,5,50,0,0,0,0,0
+menuFont=Inter,11,-1,5,50,0,0,0,0,0
 
 [KDE]
 LookAndFeelPackage=org.kde.breezedark.desktop
@@ -12,11 +16,8 @@ widgetStyle=kvantum-dark
 [Icons]
 Theme=sanchos-mono
 
-[Toolbar style]
-ToolButtonStyle=TextBesideIcon
-
 [WM]
 activeBackground=139,92,246
 activeForeground=255,255,255
-inactiveBackground=31,26,44
+inactiveBackground=29,22,38
 inactiveForeground=184,176,204

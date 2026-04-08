@@ -1,5 +1,5 @@
 name: desktop
-description: Daily desktop profile with Plasma, the v9 visual preset, NekoBox and an optional tiling-ready i3 session.
+description: Daily desktop profile with Plasma, rounded warm-purple styling, rofi launcher search, translucent panel, CustomTkinter utilities and NekoBox.
 packages:
   - plasma-desktop
   - sddm
@@ -16,15 +16,17 @@ packages:
   - xdg-utils
   - xdg-desktop-portal-kde
   - python3-tk
+  - python3-venv
   - qt5-style-kvantum
   - qt5-style-kvantum-themes
   - kde-config-gtk-style
   - breeze-gtk-theme
   - plasma-widgets-addons
-  - i3-wm
-  - i3status
-  - i3lock
   - rofi
+  - xbindkeys
+  - papirus-icon-theme
+  - fonts-inter
+  - fonts-jetbrains-mono
 modules:
   - vpn
   - backup
