@@ -9,11 +9,12 @@ Number=1
 Rows=1
 
 [Effect-blur]
-BlurStrength=15
-NoiseStrength=3
+BlurStrength=18
+NoiseStrength=2
 
 [Plugins]
 blurEnabled=true
+contrastEnabled=true
 overviewEnabled=true
 slideEnabled=false
 wobblywindowsEnabled=false
@@ -24,4 +25,4 @@ ElectricBorderTiling=false
 Placement=Centered
 
 [Tiling]
-padding=10
+padding=12

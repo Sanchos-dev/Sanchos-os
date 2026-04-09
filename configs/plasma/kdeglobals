@@ -14,10 +14,13 @@ SingleClick=false
 widgetStyle=kvantum-dark
 
 [Icons]
-Theme=sanchos-mono
+Theme=Papirus-Dark
+
+[Toolbar style]
+ToolButtonStyle=TextBesideIcon
 
 [WM]
-activeBackground=139,92,246
+activeBackground=141,98,248
 activeForeground=255,255,255
-inactiveBackground=29,22,38
-inactiveForeground=184,176,204
+inactiveBackground=28,22,36
+inactiveForeground=185,177,206

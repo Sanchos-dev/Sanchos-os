@@ -31,7 +31,7 @@ install_manifests(){ install -d "$STATE_DIR"; rm -rf /etc/sanchos-os/profiles /e
 install_wallpapers(){ install -d /usr/share/backgrounds/sanchos-os /usr/share/wallpapers; if [[ -d "$ROOT_DIR/branding/wallpapers" ]]; then rsync -a --delete --exclude 'index.json' "$ROOT_DIR/branding/wallpapers/" /usr/share/backgrounds/sanchos-os/; fi; if [[ -x "$ROOT_DIR/scripts/rebuild-wallpaper-index.py" ]]; then python3 "$ROOT_DIR/scripts/rebuild-wallpaper-index.py" /usr/share/backgrounds/sanchos-os >/dev/null; fi; if [[ -x "$ROOT_DIR/scripts/install-plasma-wallpaper-packages.py" ]]; then python3 "$ROOT_DIR/scripts/install-plasma-wallpaper-packages.py" /usr/share/backgrounds/sanchos-os /usr/share/wallpapers >/dev/null || true; fi; }
 install_icon_theme(){ install -d /usr/share/icons/sanchos-mono; [[ -f "$ROOT_DIR/branding/icons/sanchos-mono/index.theme" ]] && install -m0644 "$ROOT_DIR/branding/icons/sanchos-mono/index.theme" /usr/share/icons/sanchos-mono/index.theme; }
 install_configs(){
-  install -d /etc/libvirt/libvirtd.conf.d /etc/qemu /usr/share/sddm/themes/sanchos-os /usr/local/share/sanchos-os
+  install -d /etc/libvirt/libvirtd.conf.d /etc/qemu /etc/sddm.conf.d /usr/share/sddm/themes/sanchos-os /usr/local/share/sanchos-os
   install -d /etc/skel/.config /etc/skel/.local/share/color-schemes /etc/skel/.config/plasma-workspace/env /etc/skel/.config/Kvantum /etc/skel/.config/gtk-3.0 /etc/skel/.local/share/konsole /etc/skel/.config/rofi
   [[ -f "$ROOT_DIR/configs/libvirt/10-sanchos.conf" ]] && install -m0644 "$ROOT_DIR/configs/libvirt/10-sanchos.conf" /etc/libvirt/libvirtd.conf.d/10-sanchos.conf
   [[ -f "$ROOT_DIR/configs/network/qemu-bridge.conf" ]] && install -m0644 "$ROOT_DIR/configs/network/qemu-bridge.conf" /etc/qemu/bridge.conf
@@ -48,6 +48,8 @@ install_configs(){
   if [[ -d "$ROOT_DIR/themes/kvantum/SanchosRounded" ]]; then install -d /usr/share/Kvantum/SanchosRounded; cp -r "$ROOT_DIR/themes/kvantum/SanchosRounded/." /usr/share/Kvantum/SanchosRounded/; fi
   [[ -f "$ROOT_DIR/branding/sddm/Main.qml" ]] && install -m0644 "$ROOT_DIR/branding/sddm/Main.qml" /usr/share/sddm/themes/sanchos-os/Main.qml
   [[ -f "$ROOT_DIR/branding/sddm/metadata.desktop" ]] && install -m0644 "$ROOT_DIR/branding/sddm/metadata.desktop" /usr/share/sddm/themes/sanchos-os/metadata.desktop
+  [[ -f "$ROOT_DIR/branding/sddm/theme.conf" ]] && install -m0644 "$ROOT_DIR/branding/sddm/theme.conf" /usr/share/sddm/themes/sanchos-os/theme.conf
+  [[ -f "$ROOT_DIR/configs/system/sddm-sanchos.conf" ]] && install -m0644 "$ROOT_DIR/configs/system/sddm-sanchos.conf" /etc/sddm.conf.d/sanchos-os.conf
   printf 'profile=%s
 installed_at=%s
 ' "$PROFILE" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /usr/local/share/sanchos-os/install.env
@@ -98,7 +100,7 @@ main(){
   log "Enabling profile services"; enable_profile_services
   log "Running post-install hooks"; run_postinstall
   log "Bootstrap finished for profile: $PROFILE"
-  log "The v11 visual preset focuses on rounded Plasma, a translucent top panel, Meta+Space launcher search and warm purple styling."
+  log "The v12 visual preset focuses on polished Plasma, Papirus icons, a translucent top panel, a warm SDDM theme and a repaired launcher/control center flow."
   log "Reboot is recommended before regular use."
 }
 main "$@"

@@ -1,7 +1,12 @@
 configuration {
+  modi: "drun,run,window";
   show-icons: true;
-  modi: "drun,run";
   drun-display-format: "{name}";
   icon-theme: "Papirus-Dark";
   font: "Inter 13";
+  matching: "fuzzy";
+  display-drun: "apps";
+  display-run: "run";
+  display-window: "windows";
+  sidebar-mode: false;
 }

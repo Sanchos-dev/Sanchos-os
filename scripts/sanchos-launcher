@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 THEME="$HOME/.config/rofi/sanchos-launcher.rasi"
-if [[ ! -f "$THEME" ]]; then THEME="/etc/sanchos-os/configs/rofi/sanchos-launcher.rasi"; fi
-exec rofi -show drun -show-icons -theme "$THEME" "$@"
+if [[ ! -f "$THEME" ]]; then
+  THEME="/etc/sanchos-os/configs/rofi/sanchos-launcher.rasi"
+fi
+exec rofi -show drun -modi drun,run,window -show-icons -theme "$THEME" "$@"

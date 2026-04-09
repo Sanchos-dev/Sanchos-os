@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Sanchos Control Center
-Comment=Host and virtualization controls
+Comment=Warm desktop control surface
 Exec=/usr/local/bin/sanchos-control-center
-Icon=preferences-system
+Icon=preferences-desktop-theme-global
 Terminal=false
 Categories=Settings;System;

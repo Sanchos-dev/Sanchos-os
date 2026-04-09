@@ -1,70 +1,79 @@
 * {
-  bg: #18131fcc;
-  bg2: #241b2ecc;
-  fg: #f5f1ff;
-  muted: #c8bedf;
-  accent: #9d72ff;
-  border: #4f3c69;
+  bg0: #0f0b15ee;
+  bg1: #1a1323ee;
+  bg2: #241b31ee;
+  bg3: #342646ee;
+  fg:  #f6f1ff;
+  muted: #cdbfe7;
+  accent: #9f76ff;
+  border: #5e4790;
 }
+
 window {
   transparency: "real";
   location: center;
   anchor: center;
-  width: 38%;
+  width: 42%;
   border: 1px;
-  border-radius: 22px;
+  border-radius: 24px;
   border-color: @border;
-  background-color: @bg;
-  padding: 22px;
+  background-color: transparent;
 }
 mainbox {
-  spacing: 16px;
-  children: [ inputbar, listview ];
+  background-color: @bg0;
+  border-radius: 24px;
+  padding: 18px;
+  spacing: 14px;
+  children: [inputbar, listview];
 }
 inputbar {
-  border: 0px;
-  border-radius: 16px;
-  padding: 14px 18px;
   background-color: @bg2;
-  text-color: @fg;
-  children: [ prompt, entry ];
+  border-radius: 18px;
+  padding: 12px 16px;
+  children: [prompt, entry];
 }
 prompt {
   text-color: @accent;
-  enabled: true;
-  background-color: inherit;
-  padding: 0px 12px 0px 0px;
+  background-color: transparent;
+  padding: 0px 10px 0px 0px;
 }
 entry {
+  text-color: @fg;
   placeholder: "Search apps, files and commands";
   placeholder-color: @muted;
-  text-color: @fg;
-  background-color: inherit;
+  background-color: transparent;
 }
 listview {
+  background-color: transparent;
   lines: 8;
   columns: 1;
+  cycle: true;
+  dynamic: true;
   fixed-height: false;
-  background-color: transparent;
   spacing: 8px;
   scrollbar: false;
 }
 element {
-  border: 0px;
+  background-color: transparent;
   border-radius: 16px;
-  padding: 12px 14px;
+  padding: 10px 12px;
+  text-color: @fg;
+}
+element normal.normal {
   background-color: transparent;
   text-color: @fg;
 }
 element selected.normal {
-  background-color: #8b5cf633;
+  background-color: @bg3;
   text-color: @fg;
 }
 element-icon {
-  size: 28px;
-  margin: 0px 12px 0px 0px;
+  size: 24px;
+  background-color: transparent;
+  margin: 0px 10px 0px 0px;
 }
 element-text {
+  background-color: transparent;
   text-color: inherit;
   vertical-align: 0.5;
 }

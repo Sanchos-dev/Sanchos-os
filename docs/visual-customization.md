@@ -1,27 +1,16 @@
 # Visual customization
 
-## v10 direction
+v12 focuses on a saner Plasma-first visual direction:
 
-The default desktop now aims for:
-- a warm dark-purple palette
-- KWin as the polished default compositor
-- a floating top panel
-- Qt5-style-Kvantum rounded widget styling
-- monochrome icon inheritance
-- optional tiling instead of forced tiling
+- Papirus-Dark icons instead of a fake mono placeholder theme
+- warm purple color scheme
+- Kvantum-backed rounded widgets
+- floating centered top panel
+- CustomTkinter control tools
+- Rofi launcher on Meta+Space
 
-## Wallpapers
+## Notes
 
-The scaffold does not ship generated placeholder wallpapers anymore. Use the real assets from your repository under `branding/wallpapers/` and rebuild the index:
-
-```bash
-python3 scripts/rebuild-wallpaper-index.py branding/wallpapers
-```
-
-## Commands
-
-```bash
-sudo sanchosctl wallpaper rescan
-sudo sanchosctl wallpaper set-default purple/purple0.png --apply
-sudo sanchosctl visual apply --apply-now
-```
+- The Control Center now runs desktop actions asynchronously to avoid UI freezes.
+- The launcher uses an explicit dark theme file instead of inheriting rofi defaults.
+- SDDM is pointed at the bundled `sanchos-os` theme through `/etc/sddm.conf.d/sanchos-os.conf`.

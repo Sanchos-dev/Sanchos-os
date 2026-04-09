@@ -6,3 +6,4 @@ OnlyShowIn=KDE;
 X-GNOME-Autostart-enabled=true
 NoDisplay=false
 Terminal=false
+Icon=preferences-desktop-wallpaper

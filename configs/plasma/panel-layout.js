@@ -4,20 +4,16 @@ for (var i = 0; i < oldPanels.length; ++i) {
 }
 var panel = new Panel;
 panel.location = 'top';
-panel.height = 48;
+panel.height = 44;
 try { panel.floating = true; } catch (e) {}
 try { panel.alignment = 'center'; } catch (e) {}
 try { panel.lengthMode = 'fit'; } catch (e) {}
-try { panel.minimumLength = 880; } catch (e) {}
-try { panel.maximumLength = 1360; } catch (e) {}
+try { panel.minimumLength = 980; } catch (e) {}
+try { panel.maximumLength = 1380; } catch (e) {}
 try { panel.opacityMode = 'adaptive'; } catch (e) {}
-var leftSpacer = panel.addWidget('org.kde.plasma.panelspacer');
-try { leftSpacer.currentConfigGroup = ['General']; leftSpacer.writeConfig('expanding', false); } catch (e) {}
 panel.addWidget('org.kde.plasma.kickoff');
 panel.addWidget('org.kde.plasma.icontasks');
-var centerSpacer = panel.addWidget('org.kde.plasma.panelspacer');
-try { centerSpacer.currentConfigGroup = ['General']; centerSpacer.writeConfig('expanding', true); } catch (e) {}
+var spacer = panel.addWidget('org.kde.plasma.panelspacer');
+try { spacer.currentConfigGroup = ['General']; spacer.writeConfig('expanding', true); } catch (e) {}
 panel.addWidget('org.kde.plasma.systemtray');
 panel.addWidget('org.kde.plasma.digitalclock');
-var rightSpacer = panel.addWidget('org.kde.plasma.panelspacer');
-try { rightSpacer.currentConfigGroup = ['General']; rightSpacer.writeConfig('expanding', false); } catch (e) {}
