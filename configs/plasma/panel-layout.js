@@ -4,13 +4,15 @@ for (var i = 0; i < oldPanels.length; ++i) {
 }
 var panel = new Panel;
 panel.location = 'top';
-panel.height = 44;
+panel.height = 42;
 try { panel.floating = true; } catch (e) {}
 try { panel.alignment = 'center'; } catch (e) {}
 try { panel.lengthMode = 'fit'; } catch (e) {}
-try { panel.minimumLength = 980; } catch (e) {}
-try { panel.maximumLength = 1380; } catch (e) {}
+try { panel.minimumLength = 920; } catch (e) {}
+try { panel.maximumLength = 1260; } catch (e) {}
+try { panel.offset = 0; } catch (e) {}
 try { panel.opacityMode = 'adaptive'; } catch (e) {}
+try { panel.visibility = 'normal'; } catch (e) {}
 panel.addWidget('org.kde.plasma.kickoff');
 panel.addWidget('org.kde.plasma.icontasks');
 var spacer = panel.addWidget('org.kde.plasma.panelspacer');

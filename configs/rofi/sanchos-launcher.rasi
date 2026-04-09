@@ -1,8 +1,16 @@
+configuration {
+  modi: "drun,run,window";
+  show-icons: true;
+  drun-display-format: "{name}";
+  icon-theme: "Papirus-Dark";
+  font: "Inter 12";
+}
+
 * {
-  bg0: #0f0b15ee;
-  bg1: #1a1323ee;
-  bg2: #241b31ee;
-  bg3: #342646ee;
+  bg0: #120e18f2;
+  bg1: #1a1323f2;
+  bg2: #241b31f2;
+  bg3: #342646f2;
   fg:  #f6f1ff;
   muted: #cdbfe7;
   accent: #9f76ff;
@@ -17,10 +25,10 @@ window {
   border: 1px;
   border-radius: 24px;
   border-color: @border;
-  background-color: transparent;
+  background-color: @bg0;
 }
 mainbox {
-  background-color: @bg0;
+  background-color: transparent;
   border-radius: 24px;
   padding: 18px;
   spacing: 14px;
@@ -44,7 +52,8 @@ entry {
   background-color: transparent;
 }
 listview {
-  background-color: transparent;
+  background-color: @bg1;
+  border-radius: 18px;
   lines: 8;
   columns: 1;
   cycle: true;
@@ -52,6 +61,7 @@ listview {
   fixed-height: false;
   spacing: 8px;
   scrollbar: false;
+  padding: 8px;
 }
 element {
   background-color: transparent;

@@ -12,13 +12,13 @@ Rectangle {
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
         source: "/usr/share/backgrounds/sanchos-os/purple/purple0.png"
-        opacity: 0.55
+        opacity: 0.68
     }
 
-    Rectangle { anchors.fill: parent; color: "#120d18"; opacity: 0.42 }
+    Rectangle { anchors.fill: parent; color: "#120d18"; opacity: 0.28 }
 
     Rectangle {
-        width: 560; height: 460; radius: 30
+        width: 620; height: 480; radius: 30
         anchors.centerIn: parent
         color: "#1d1626dd"
         border.width: 1
@@ -26,18 +26,18 @@ Rectangle {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 34
+            anchors.margins: 36
             spacing: 16
 
             Label { text: "sanchos-os"; color: "#f5f1ff"; font.pixelSize: 34; font.bold: true }
             Label { text: "warm login shell"; color: "#ccbfe7"; font.pixelSize: 16 }
 
-            ComboBox {
-                id: userCombo
-                model: userModel
-                textRole: "name"
+            TextField {
+                id: username
                 Layout.fillWidth: true
                 implicitHeight: 44
+                placeholderText: "Username"
+                text: ""
             }
 
             TextField {
@@ -47,22 +47,14 @@ Rectangle {
                 echoMode: TextInput.Password
                 placeholderText: "Password"
                 focus: true
-                onAccepted: sddm.login(userCombo.currentText, text, session.index)
-            }
-
-            ComboBox {
-                id: session
-                model: sessionModel
-                textRole: "name"
-                Layout.fillWidth: true
-                implicitHeight: 40
+                onAccepted: sddm.login(username.text, text, 0)
             }
 
             Button {
                 text: "Sign in"
                 Layout.fillWidth: true
                 implicitHeight: 46
-                onClicked: sddm.login(userCombo.currentText, password.text, session.index)
+                onClicked: sddm.login(username.text, password.text, 0)
             }
 
             Item { Layout.fillHeight: true }

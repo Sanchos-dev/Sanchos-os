@@ -25,7 +25,7 @@ def preferred_wallpaper():
         pass
     return 'purple/purple0.png'
 
-def run(command, env=None, timeout=12):
+def run(command, env=None, timeout=18):
     return subprocess.run(command, check=False, env=env, timeout=timeout).returncode
 
 def copy_if_exists(src, dst):
@@ -64,14 +64,13 @@ def restart_hotkeys(env):
 def refresh_lookandfeel(env):
     for cmd in [
         ['plasma-apply-colorscheme', 'SanchosWarm'],
-        ['plasma-apply-desktoptheme', 'default'],
+        ['plasma-apply-desktoptheme', 'breeze-dark'],
     ]:
         if shutil.which(cmd[0]):
-            run(cmd, env=env, timeout=15)
-    if shutil.which('kbuildsycoca5'):
-        run(['kbuildsycoca5'], env=env, timeout=20)
-    if shutil.which('kbuildsycoca6'):
-        run(['kbuildsycoca6'], env=env, timeout=20)
+            run(cmd, env=env, timeout=20)
+    for cmd in [['kbuildsycoca5'], ['kbuildsycoca6']]:
+        if shutil.which(cmd[0]):
+            run(cmd, env=env, timeout=20)
 
 def reconfigure_live_session(env):
     if shutil.which('qdbus'):
@@ -79,8 +78,9 @@ def reconfigure_live_session(env):
         run(['qdbus', 'org.kde.plasmashell', '/PlasmaShell', 'org.kde.PlasmaShell.reloadConfig'], env=env)
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Apply the v12 desktop preset to a user home.')
-    parser.add_argument('--user', default=os.environ.get('SUDO_USER') or os.environ.get('USER') or 'root')
+    parser = argparse.ArgumentParser(description='Apply the v13 desktop preset to a user home.')
+    default_user = os.environ.get('SANCHOS_DESKTOP_USER') or os.environ.get('SUDO_USER') or os.environ.get('USER') or 'root'
+    parser.add_argument('--user', default=default_user)
     parser.add_argument('--enable-tiling', action='store_true')
     parser.add_argument('--disable-tiling', action='store_true')
     parser.add_argument('--apply-now', action='store_true')
@@ -90,7 +90,7 @@ def main(argv=None):
 
     config_root = resolve_config_root()
     user = pwd.getpwnam(args.user)
-    home = Path(user.pw_dir)
+    home = Path(os.environ.get('HOME', user.pw_dir))
     config = home / '.config'
     local_share = home / '.local' / 'share'
 
@@ -106,14 +106,16 @@ def main(argv=None):
         copy_if_exists(config_root / 'rofi' / name, config / 'rofi' / name)
 
     runtime_env = os.environ.copy()
-    runtime_env.update({'HOME': str(home), 'USER': args.user})
+    runtime_env.update({'HOME': str(home), 'USER': args.user, 'LOGNAME': args.user, 'SANCHOS_DESKTOP_USER': args.user})
 
     tiling_enabled = args.enable_tiling and not args.disable_tiling
     env_dir = config / 'plasma-workspace' / 'env'
     env_dir.mkdir(parents=True, exist_ok=True)
     wm_script = env_dir / '90-sanchos-wm.sh'
     if tiling_enabled:
-        wm_script.write_text('#!/usr/bin/env sh\nexport KDEWM=/usr/bin/i3\n')
+        wm_script.write_text('''#!/usr/bin/env sh
+export KDEWM=/usr/bin/i3
+''')
         wm_script.chmod(0o755)
     else:
         wm_script.unlink(missing_ok=True)
@@ -124,17 +126,18 @@ def main(argv=None):
     write_config('kdeglobals', 'smallestReadableFont', ['General'], 'Inter,10,-1,5,50,0,0,0,0,0', runtime_env)
     write_config('kdeglobals', 'menuFont', ['General'], 'Inter,11,-1,5,50,0,0,0,0,0', runtime_env)
     write_config('kdeglobals', 'toolBarFont', ['General'], 'Inter,10,-1,5,50,0,0,0,0,0', runtime_env)
-    write_config('kdeglobals', 'widgetStyle', ['KDE'], 'kvantum-dark', runtime_env)
+    write_config('kdeglobals', 'widgetStyle', ['KDE'], 'Breeze', runtime_env)
     write_config('kdeglobals', 'Theme', ['Icons'], 'Papirus-Dark', runtime_env)
+    write_config('kwinrc', 'theme', ['org.kde.kdecoration2'], 'Breeze', runtime_env)
     write_config('konsolerc', 'DefaultProfile', ['Desktop Entry'], 'SanchosDark.profile', runtime_env)
     write_config('gtk-3.0/settings.ini', 'gtk-icon-theme-name', ['Settings'], 'Papirus-Dark', runtime_env)
+    write_config('gtk-3.0/settings.ini', 'gtk-theme-name', ['Settings'], 'Breeze-Dark', runtime_env)
 
     refresh_lookandfeel(runtime_env)
-
     if args.apply_now and (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
         run(['python3', str(resolve_script_path('apply-plasma-wallpaper.py')), wallpaper], env=runtime_env, timeout=20)
         if not args.skip_layout:
-            run(['python3', str(resolve_script_path('apply-plasma-layout.py'))], env=runtime_env, timeout=20)
+            run(['python3', str(resolve_script_path('apply-plasma-layout.py'))], env=runtime_env, timeout=24)
         restart_hotkeys(runtime_env)
         reconfigure_live_session(runtime_env)
 
@@ -146,7 +149,7 @@ def main(argv=None):
         'panel_layout': 'top-floating',
         'color_scheme': 'SanchosWarm',
         'icon_theme': 'Papirus-Dark',
-        'window_style': 'kvantum-dark',
+        'window_style': 'Breeze',
         'launcher': 'rofi',
     }
     (state_dir / 'visual-preset.json').write_text(json.dumps(state, indent=2) + '\n')

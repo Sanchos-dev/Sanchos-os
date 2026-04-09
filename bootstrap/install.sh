@@ -100,7 +100,7 @@ main(){
   log "Enabling profile services"; enable_profile_services
   log "Running post-install hooks"; run_postinstall
   log "Bootstrap finished for profile: $PROFILE"
-  log "The v12 visual preset focuses on polished Plasma, Papirus icons, a translucent top panel, a warm SDDM theme and a repaired launcher/control center flow."
+  log "The v13 visual preset focuses on stable Breeze-based styling, Papirus icons, a delayed floating panel apply, root-launched control tools and a repaired SDDM theme."
   log "Reboot is recommended before regular use."
 }
 main "$@"

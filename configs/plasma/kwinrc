@@ -24,5 +24,8 @@ BorderlessMaximizedWindows=false
 ElectricBorderTiling=false
 Placement=Centered
 
+[org.kde.kdecoration2]
+theme=Breeze
+
 [Tiling]
 padding=12

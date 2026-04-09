@@ -246,7 +246,7 @@ class App(ctk.CTk):
         self.wallpaper_menu.configure(values=wallpapers)
         self.wallpaper_var.set(self.default_wallpaper.get() if self.default_wallpaper.get() in wallpapers else wallpapers[0])
         self.appearance_notes.delete('1.0', 'end')
-        self.appearance_notes.insert('1.0', 'Visual direction:\n- Warm dark purple shell\n- Rounded cards and launcher search\n- Floating top panel\n- Papirus-Dark icons + Kvantum window style\n\nTip: use Meta+Space to open the launcher after login.')
+        self.appearance_notes.insert('1.0', 'Visual direction:\n- Warm dark purple shell\n- Rounded cards and launcher search\n- Floating top panel\n- Papirus-Dark icons + Breeze-based window styling\n\nTip: use Meta+Space to open the launcher after login.')
 
     def refresh_launcher(self):
         self.launcher_box.delete('1.0', 'end')
@@ -263,7 +263,7 @@ class App(ctk.CTk):
     def apply_visual(self):
         def work():
             helper = '/usr/local/lib/sanchos-os/configure-desktop-style.py'
-            ok, text = run(['python3', helper, '--user', os.environ.get('USER', 'root'), '--apply-now', '--disable-tiling'])
+            ok, text = run(['python3', helper, '--user', os.environ.get('SANCHOS_DESKTOP_USER') or os.environ.get('USER', 'root'), '--apply-now', '--disable-tiling'])
             return text
         self.run_async('Applying polished preset…', work)
 

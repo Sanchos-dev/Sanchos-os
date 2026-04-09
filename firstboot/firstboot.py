@@ -98,7 +98,7 @@ class FirstBoot(ctk.CTk):
         def worker():
             run(['pkexec', 'sanchosctl', 'wallpaper', 'set-default', selected])
             run(['sanchosctl', 'wallpaper', 'apply', selected])
-            run(['python3', '/usr/local/lib/sanchos-os/configure-desktop-style.py', '--user', os.environ.get('USER', 'root'), '--apply-now', '--disable-tiling'])
+            run(['python3', '/usr/local/lib/sanchos-os/configure-desktop-style.py', '--user', os.environ.get('SANCHOS_DESKTOP_USER') or os.environ.get('USER', 'root'), '--apply-now', '--disable-tiling'])
             if self.apply_panel.get():
                 run(['python3', '/usr/local/lib/sanchos-os/apply-plasma-layout.py'])
             if self.launch_cc.get():
