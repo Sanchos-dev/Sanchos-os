@@ -12,10 +12,15 @@
 
 ## Style 
   WM:hyprland
+  
   Style: 5 base colors: green, red, purple, blue, gray
+  
   Out of the box support for animated wallpapers
+  
   Custom quickshell
+  
   Custom rofi
+  
   Custom fastfech
   
 ## QOL(quality of life)
