@@ -4,7 +4,7 @@
   
   System for every day use
   
-  Bunch of useful ui/tui tools, with Sanchos-Ecosystem integration(account optional), fully custom visuals
+  Bunch of useful ui/tui tools, with Sanchos-Ecosystem (music, notes, hlma) integration(account optional), fully custom visuals
   
   Type: full system with customized grub and installer (not liveiso)
   
@@ -42,5 +42,8 @@
 ## why?
 I want to make system that will be useful and comfortable for me
 
+Also i Want to practice
+
 
 FUCK DOCKER
+I LOVE LXC and KVM
