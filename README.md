@@ -1,4 +1,5 @@
-# Sanchos-OS
+![SanchosOS Banner](src/banner-1280-400.png)
+
 ## Baseline
   Based on Arch
   
